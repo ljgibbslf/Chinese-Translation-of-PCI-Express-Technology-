@@ -9,8 +9,8 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 本翻译仅用于学习使用
 
 #### 贡献列表
-Michael M
-
+Michael M,
+LJ Gibbs,lf_gibbs@163.com
 
 
 #### 参与翻译
