@@ -18,13 +18,13 @@ PCI Express的出现代表了其前身并行总线的重大转变。作为一种
 
 正如许多高速串行传输方法一样，PCIe使用双向连接方式，可以在同一时间同时进行信息的收发操作（即区分开了TX、RX，而不是像PCI一样在同一根线上作为inout）。这种模型被称为双单工连接（Dual-simplex connection），因为每个接口都有一个单工发送路径和一个单工接收路径，图 2‑1展示了这种模型。因为数据流可以同时进行双向传输，因此在技术层面上来说两个设备间的通信其实是全双工的，但是PCIe协议规范依然使用双单工这个术语，这是因为这种称呼对实际通信信道也进行了一点描述，即通信信道由两个方向的各自的单工信道组成。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image042.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image042.jpg)
 
 图 2‑1双单工链路
 
 用于描述设备之间信号传输路径的术语为“链路（Link）”，它由一个或以上的接收发送对组成。这样的一对接收和发送被称为一个“通道（Lane）”，协议规范允许一条链路内有1、2、4、8、12、16或32个Lane。链路内Lane的数量称为链路宽度，通常用x1、x2、x4、x8、x16以及x32来进行表示。用于权衡在实际设计中使用多少Lane的思路其实很简单：使用更多的Lane可以增加带宽，但是也会增加成本、增加空间占用以及增加功耗。更多关于这方面的信息，可以阅读“Links and Lanes（链路与通道）”这一节。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image044.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image044.jpg)
 
 图 2‑2一个Lane（通道）
 
@@ -44,7 +44,7 @@ l **克服问题**
 
  
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image046.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image046.jpg)
 
 图 2‑3 并行总线的局限
 
@@ -54,7 +54,7 @@ l **带宽**
 
 PCIe支持的高速且含有多Lane（通道）的链路带来了傲人的带宽数值，如表 2‑1所示。这些数字都来源于比特率与总线特性。其中一种特性与其他许多串行传输方法类似，那就是PCIe的前两代版本中使用了被称为8b/10b的编码过程，这种编码过程会根据8bit的输入而生成10bit的输出。尽管这样做会引起一些开销，但是有几个很好的理由支持我们这样做，我们将会在后面讲到。对于现在来说，只需要知道对于8b/10b编码来说，要发送1Byte的数据实际需要传送10bit。第一代PCIe（称为Gen1或者PCIe协议规范版本1.x）中，比特率为2.5GT/s，将它除以10即可得知一个Lane（通道）的速率将可以达到0.25GB/s。因为链路可以在同一时刻进行发送和接收，因此聚合带宽可以达到这个数值的两倍，即每个Lane（通道）达到0.5GB/s。第二代PCIe（称为Gen2或者PCIe 2.x）中将总线频率翻倍，这也使得它的带宽相较于Gen1翻倍。第三代PCIe（称为Gen3或者PCIe 3.0）再次让带宽翻倍，但是这次协议的制定者们并没有选择将频率翻倍。相反，出于一些原因（我们稍后将会进行讨论），他们仅将频率提升到8GT/s（Gen2中是5GT/s，未翻倍），并不再采用8b/10b的编码方式，而是采用了另一种编码机制，即128b/130b编码（关于这个内容的更多信息，可以阅读“Physical Layer-Logical（Gen3）”章节）。表 2‑1列出了当前几代PCIe的各种Lane（通道）数量情况下的带宽，展示出了链路对应情况下的峰值吞吐量。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image048.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image048.jpg)
 
 表 2‑1 PCIe Gen1,Gen2,Gen3的各种链路宽度下的带宽汇总
 
@@ -80,7 +80,7 @@ n Gen3 PCIe带宽=（2.0Gb/s x 2 directions）/8bits per byte=2.0GB/s
 
 差分信号的接收端将会接收这一对相位相反的信号，用正信号的电压减去其反相信号的电压，得到它们的差值，以此来判定这1bit的逻辑电平值。差分传输设计内置了抗噪声干扰的设计，因为它要求成对的差分信号必须位于每个设备的相邻的引脚上，它们的走点也必须彼此非常靠近，以保持合适的传输线阻抗。因此，任何因素在影响差分对中的一个信号的时候，都会同等程度且同样方向地影响到另一个信号。但是接收端所在意的是它们的差值，而这些噪声干扰并不会改变这个差值，所以带来的结果就是大多数情况下噪声对信号的影响并不会引起接收端对bit的正确判别。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image050.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image050.jpg)
 
 图 2‑4 差分信号示意图
 
@@ -90,7 +90,7 @@ n Gen3 PCIe带宽=（2.0Gb/s x 2 directions）/8bits per byte=2.0GB/s
 
 关于时钟恢复，有一件需要注意的事情，PLL需要输入端的信号跳变来完成相位比较。如果很长一段时间数据都没有任何跳变，那么PLL的恢复时钟可能会偏离正确的时钟频率。为了避免这种问题，8b/10b编码中的设计目标之一就是要确保比特流中连续的1或者0的数量不能超过5个（想获得更多关于这部分的内容，请参考“8b/10b Encoding”一节）
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image052.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image052.jpg)
 
 图 2‑5简单的锁相环图示
 
@@ -118,7 +118,7 @@ n Gen3 PCIe带宽=（2.0Gb/s x 2 directions）/8bits per byte=2.0GB/s
 
 如图 2‑6展示了一个简单的PCIe拓扑示例，它将有助于我们对本节的一些定义内容进行讲解。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image054.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image054.jpg)
 
 图 2‑6 PCIe拓扑示例
 
@@ -146,7 +146,7 @@ Endpoints（EP，端点）是PCIe拓扑中的既不是Switch也不是Bridge的�
 
 一种保持软件兼容性的方法是保持EP和Bridge的配置头（configuration header）与PCI一致，如图 2‑7所示。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image056.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image056.jpg)
 
 图 2‑7 配置头
 
@@ -154,13 +154,13 @@ Endpoints（EP，端点）是PCIe拓扑中的既不是Switch也不是Bridge的�
 
 为了举例说明PCIe系统在软件中的展现形式，我们可以参考图 2‑8中所展示的拓扑结构的例子。像之前所说的一样，RC位于整个层次结构的顶端。RC自身的内部可以非常复杂，但是它通常会实现一个内部总线结构以及一些桥接结构，以便将拓扑扇出到几个端口。RC的内部总线将被配置软件视作PCI总线0，且RC上这几个PCIe端口将被视作是PCI-to-PCI Bridge。这种内部结构其实并不是一个实际的PCI总线，但是它在软件中看起来就是这种结构。因为这个总线是在RC内部的，所以它实际的逻辑设计并不需要遵循任何的标准，这里是可以由供应商来进行自定义的。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image058.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image058.jpg)
 
 图 2‑8拓扑结构示例
 
 类似的，PCIe Switch（交换结构）的内部结构对于软件来说就是简单地几个Bridge共享一条公共总线，如图 2‑9所示。这样做的主要优点就是使得事务的路由方法能够与PCI一致。枚举，这是配置软件用来发现系统拓扑结构并分配总线号和系统资源的过程，它的工作方式也与PCI中相同。在稍后的内容中我们将通过一些例子来讲述枚举是如何工作的。一旦枚举完成，系统中的总线号就将按照图 2‑9所示的方式进行分配。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image060.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image060.jpg)
 
 图 2‑9系统枚举结果的示例
 
@@ -172,11 +172,11 @@ Endpoints（EP，端点）是PCIe拓扑中的既不是Switch也不是Bridge的�
 
 这也给了我们一个机会来重新审视一个问题，RC是由什么组成的。在这个例子中，被标识为“英特尔处理器”的方块包含了许多组件，大多数现代的CPU架构都是如此。这个处理器包含了一个用于访问图形设备（例如显卡）的x16 PCIe端口，以及两条DRAM通道，这两条DRAM通道意味着内存控制器以及一些路由逻辑已经被集成到CPU封装（CPU Package）中。总的来说，这些资源通常被称为“非核心”资源，这样的称呼用于将他们与CPU封装中的几个CPU核心（CPU Core）区分开来。此前，我们描述过Root是CPU与PCIe拓扑相连接的接口，这意味着在CPU封装中必须含有Root的一部分。正如图 2‑11中虚线所框出的，Root由多个封装的一部分共同组成。这种Root的组成方式可能将会是未来很长一段时间内的系统的设计方式。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image062.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image062.jpg)
 
 图 2‑10 低成本的PCIe系统
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image064.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image064.jpg)
 
 图 2‑11服务器PCIe系统
 
@@ -186,7 +186,7 @@ Endpoints（EP，端点）是PCIe拓扑中的既不是Switch也不是Bridge的�
 
 PCIe定义了一种分层的体系结构，如图 2‑12是这种分层体系结构的示意图。我们可以认为这些层在逻辑上是相互独立的部分，因为他们各自都有一个用于发出信息流的发送端和一个接收信息流的接收端。这种分层的设计方法对硬件设计者来说有不少的优点，因为如果在设计中对逻辑进行了仔细的划分，那么就可以在以后升级到新的协议规范版本时仅改变原设计中的某一层即可，而不会影响或者变动其它层。虽然如此，但是需要注意的是，这些层只是定义了接口的工作职责，而实际设计并不要求为了符合规范而将设计按照层级来分成几个部分，即分层的概念更偏重于在逻辑层面，不强制要求划分的很严格。本节的目的在于描述各个层的功能职责，以及描述完成一次数据传输时的事件流程。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image066.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image066.jpg)
 
 图 2‑12 PCI Express设备层次示意图
 
@@ -202,7 +202,7 @@ l 物理层（Physical Layer）。物理层负责在发送端产生Ordered-set P
 
 每个PCIe接口都支持这些层的功能，包括Switch端口，如图 2‑13所示。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image068.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image068.jpg)
 
 图 2‑13 Switch端口的层次
 
@@ -212,7 +212,7 @@ l 物理层（Physical Layer）。物理层负责在发送端产生Ordered-set P
 
 在我们讲的更深入之前，让我们先大致了解一下这些层是如何交互的。从广义上说，设备所发出的请求包或者完成包是在事务层进行组包的，组包所用到的信息是由device core所提供的，有时我们将device core称为Software Layer软件层（尽管协议规范中并没有使用这一术语）。它提供的组包信息通常包括期望的命令类型、目标设备的地址、请求的属性特征等等。刚组好的数据包会被存入一个buffer称为Virtual Channel（虚拟通道），直到这个包可以被发往下一个层级。当这个包被向下发给数据链路层后，数据链路层会在数据包中加入额外的信息以供对端的接收方进行错误检查，而且这个数据包会在本地储存下来，这样我们就可以在对端检测到传输出错时重新发送这个数据包。当数据包到达物理层后，它被编码，并使用链路上的所有可用的通道、以差分信号的形式进行传输。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image070.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image070.jpg)
 
 图 2‑14 PCIe设备层次的详细框图
 
@@ -238,7 +238,7 @@ Device Core是一个设备的核心功能，例如网络接口或是硬盘驱动
 
 前三种（Memory、IO、Configuration）在PCI和PCI-X中就已经得到支持，但是Message是PCIe中的一个新的请求种类。一个请求包向目标设备传送命令，目标设备作为响应请求而发回的一个或多个完成包，这二者组合起来就是对一个事务的定义，即一个事务由一个请求包以及所有返回的完成包共同组成。如表 2‑2列出了PCIe请求的类型。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image072.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image072.jpg)
 
 表 2‑2 PCIe请求类型
 
@@ -250,13 +250,13 @@ Device Core是一个设备的核心功能，例如网络接口或是硬盘驱动
 
 PCIe请求包和完成包的包类型被罗列在表 2‑3中。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image074.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image074.jpg)
 
 表 2‑3 PCIe TLP类型
 
 TLPs起始于发送方的事务层，终止于接收方的事务层，如图 2‑15所示。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image076.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image076.jpg)
 
 图 2‑15 TLP的起点与目的地
 
@@ -266,7 +266,7 @@ TLPs起始于发送方的事务层，终止于接收方的事务层，如图 2�
 
 如展示了一个封装完成的TLP的各个部分是如何在链路上进行传输的，我们可以从中发现这个数据包中的不同部分是分别由不同的层来添加的。为了更容易看出这个数据包是怎么构成的，我们将TLP的不同部分用不同的颜色进行标识，以此来表示对应的部分是由哪一层添加的：红色代表事务层，蓝色代表数据链路层，绿色代表物理层。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image078.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image078.jpg)
 
 图 2‑16 TLP的组包形式
 
@@ -282,7 +282,7 @@ Device Core负责将组成TLP的核心部分的信息发送给事务层，即上
 
 如果目标设备有能力并且启用了ECRC校验的功能，那么它将对ECRC进行错误校验。若TLP到达了最终的目的设备，而且校验无错，那么在事务层中将把这个ECRC字段剥除，使得整个数据包只剩下Header和数据部分，并将这些剩余部分转发给软件层。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image080.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image080.jpg)
 
 图 2‑17 TLP的拆包形式
 
@@ -294,7 +294,7 @@ Device Core负责将组成TLP的核心部分的信息发送给事务层，即上
 
 这些完成包内也包含了路由信息，用于将它们指引回到Requester，这是因为Requester在原先的请求包中就附带了需要返回的地址的信息，所以Completer就可以将这个地址用来放在完成包中作为完成包的路由信息。这个“返回地址”其实很简单，它就是PCI中定义的Device ID，这个ID由三个东西组成：Requester所属PCI总线在系统中的PCI总线号、Requester在所属PCI总线上的设备号、Requester在所属设备中的Function号。这样的总线号、设备号、Function号组合起来的信息（有时被缩写为BDF，Bus、Device、Function）就是完成包用来返回到Requester的路由信息。正如PCI-X所做的那样，Requester可以同时有多个正在进行的拆分事务（split transaction），它必须能够将输入的完成包和正确的请求关联起来。为了便于实现这一点，Requester在原先的请求包中加入了一个值称为Tag，这个Tag对于每一个请求而言都是独一无二的，也就是说每一个未完成的请求都有一个与其他未完成的请求不同的Tag号。Completer会将这个事务的Tag拷贝进完成包中，这样Requester就可以快速地通过完成包中的Tag来将这个完成包与正确的请求关联起来，也就是找到了这个完成包是用来服务哪个请求的。最后还要说一点，Completer还可以设置完成包中的完成状态字段中的bit，以此来表示出事务的错误情况。这至少可以让Requester对哪里可能出错了有一个大致的了解。Requester如何去处理大多数的错误，这个事情一般是由软件来决定，这并不在PCIe协议规范的范围内。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image082.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image082.jpg)
 
 图 2‑18 Non-Posted Read的示例
 
@@ -306,7 +306,7 @@ Locked Memory Read这种读请求是为了支持一种叫做原子读-修改-写
 
 这个locked request使用目标memory地址作为路由信息，并最终到达了遗留设备EP（Legacy Endpoint）。当数据包经过沿途的每个路由设备时（称为服务点），数据包的出口端口被锁定，这意味着在被解锁之前这条路径都不能通过其他的数据包。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image084.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image084.jpg)
 
 图 2‑19 Non-Posted Locked Read事务协议
 
@@ -320,7 +320,7 @@ Locked Memory Read这种读请求是为了支持一种叫做原子读-修改-写
 
 如果完成包中显示并未出现错误，那么Requester就认为写数据被成功的送达目标设备并成功写入，可以允许针对这一个Completer的指令序列继续向下执行。也就是说，在Requester中有一系列的针对Completer的指令，当知道这一个IO写请求完成了之后，允许执行指令序列中的下一个指令，即想表达的是需要确认这个写请求成功了才允许继续执行下一条指令。这很好的总结了Non-Posted写的目的：不同于一个Memory写（MWr是Posted的），Non-Posted写不能仅仅知道数据被送往了目的方，还必须要知道数据真的到达了目的方才行，否则在逻辑上不能继续执行下一步。又如同Locked操作一样，Non-Posted写请求只能由处理器发出。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image086.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image086.jpg)
 
 图 2‑20 Non-Posted Write事务协议
 
@@ -330,7 +330,7 @@ Locked Memory Read这种读请求是为了支持一种叫做原子读-修改-写
 
 Memory写请求必然是Posted类型的，它不需要返回完成包。一旦这种写请求包被发出，Requester不需要等到任何反馈就可以继续去进行下一条请求，不需要在返回完成包这件事情上花费时间和带宽。因此，Posted写会比Non-Posted写更加快速且高效，并很好的提升了系统的性能。如图 2‑21所示，请求包使用memory地址作为路由信息在系统中进行路由转发，并最终到达Completer。一旦链路成功的将这个请求发送过去（这里的成功是指把数据包传输了过去，而不需要得到Completer的成功确认），这个事务在链路上就已经结束了，链路上就可以继续传输其他的数据包了。最终，Completer接收写请求包中的数据，这个事务才真正完成。当然，这种事务执行方法在提升效率的同时也舍弃了一些东西，因为Completer不需要发送完成包，所以这也意味着它无法将错误报告给Requester。如果Completer发生了错误，那么它可以记录下这个错误，并向RC发一个Message来通知系统软件这些情况，但是Requester对这些是完全不知情的。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image088.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image088.jpg)
 
 图 2‑21 Posted Memory Write事务协议
 
@@ -346,7 +346,7 @@ PCIe从一开始就被设计为能够支持时间敏感事务，例如流视频�
 
 为了用图片来解释这个概念，请见图 2‑22，其中的视频摄像头以及SCSI设备都需要向系统DRAM发送数据。这二者的不同之处在于，摄像头是对时效性要求严格的，如果传输路径无法满足摄像头的带宽，那么将出现丢帧的现象。因此系统需要保障摄像头所需要的最小带宽，否则它捕捉的视频画面将会出现不稳定。与此同时，SCSI数据需要正确无误的进行传输，但是对于它来说传输需要的时间长短并不是那么重要。显然，当视频数据和SCSI数据同时需要被发送时，视频数据流应当具有更高的优先级。QoS指的是系统的一种能力，是系统为数据包分配不同优先级并将这些数据包按照确定性的延时、带宽在系统拓扑中进行路由的能力。想了解更多关于QoS的细节，请参阅Chapter 7“Quality of Service”。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image090.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image090.jpg)
 
 图 2‑22 QoS示例
 
@@ -358,7 +358,7 @@ PCIe从一开始就被设计为能够支持时间敏感事务，例如流视频�
 
 串行传输所使用的一个典型协议是，要求发送方仅在对端有足够的缓冲区接收时才发送数据包。这样的规定删去了总线上的性能浪费操作事件，比如PCI中允许进行的断开（disconnect）与重试（retry），这使得这类问题在传输中得到消除。这样做的代价是，接收方必须足够频繁的报告它的可用缓冲区空间来避免不必要的传输停顿，而且这样的报告也需要占用接收方自己的一点带宽。在PCIe中，这个可用缓冲区空间的报告是由DLLP（Data Link Layer Packet）来完成的，我们将在下一节讲到DLLP。这里不使用TLP的原因是为了避免可能出现的死锁现象，如果使用TLP则可能出现，例如一个设备A作为发送方需要对接收方B的可用缓冲区空间进行更新，但是当A的接收缓冲区满导致它又无法接收来自B的可用缓冲区报告，这样就出现了一个死循环。而DLLP可以不管缓冲区状态就进行收发，这样就避免了死锁的问题。这样的流量控制协议由硬件级进行自动管理，对于软件来说是透明的。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image092.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image092.jpg)
 
 图 2‑23流量控制基础操作
 
@@ -372,7 +372,7 @@ PCIe从一开始就被设计为能够支持时间敏感事务，例如流视频�
 
 DLLP是一种在位于同一条链路上的本端设备的数据链路层与对端设备的数据链路层之间传输的数据包。事务层对这些数据包并无感知，它们只在两个相临近的设备之间传输，不会被路由到任何其他地方。DLLP通常要小于TLP，大部分情况下DLLP只有8Bytes，这是一件好事，因为DLLP的大小也反应着维护链路所需要的开销。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image094.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image094.jpg)
 
 图 2‑24 DLLP的起始地和目的地
 
@@ -390,11 +390,11 @@ DLLP是一种在位于同一条链路上的本端设备的数据链路层与对�
 
 如果接收方检测到了一个TLP错误，它将会把这个TLP丢弃，并向发送方返回一个Nak DLLP，以期望发送方能对未确认成功接收的TLP进行重传，并通过重传获得一个完好的TLP。由于错误检测通常是十分迅速的操作，因此从错误检测开始到发起重传的时间也比较短，这样就可以在较短的时间内纠正发生的错误。这一操作过程被称为Ack/Nak协议（Acknowledge/NotAcknowledge）。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image096.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image096.jpg)
 
 图 2‑25 数据链路层重传机制
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image098.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image098.jpg)
 
 图 2‑26 在数据链路层中的TLP与DLLP的包结构
 
@@ -418,7 +418,7 @@ DLLP是一种在位于同一条链路上的本端设备的数据链路层与对�
 
 **步骤4b****：**校验未发现出错，因此Requester向Switch返回一个Ack DLLP。作为响应，Switch之前输出这个CplD TLP的输出端口会将其重传Buffer中保存的这个CplD TLP的副本丢弃。Requester将校验ECRC字段域（这个字段是可选的，不是必需的），校验未出错则将完成包里的数据向上呈交给Device Core逻辑。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image100.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image100.jpg)
 
 图 2‑27使用Ack/Nak协议的Non-Posted事务
 
@@ -440,7 +440,7 @@ DLLP是一种在位于同一条链路上的本端设备的数据链路层与对�
 
 由数据链路层转发来的TLP与DLLP被物理层中的buffer所记录，在这个buffer中会对这些数据包加上包起始字符和包结束字符，这两个字符将有助于接收端用来检测数据包的边界。由于包起始字符和包结束字符分别出现在数据包的两端（头和尾），因此他们也被称作“组帧（framing）”字符。如图 2‑28展示了组帧字符被添加在TLP和DLLP上，它也展示了这两种字符的字段长度。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image102.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image102.jpg)
 
 图 2‑28物理层中的TLP与DLLP的结构
 
@@ -470,7 +470,7 @@ u 多通道链路中的Lane-to-Lane歪斜去除（de-skew）。
 
 物理的发送器和接收器是通过一个AC耦合链路相连接，如图 2‑29所示。所谓“AC耦合（交流耦合）”，意思是两个设备相连接的物理路径上放置有电容，它用于让信号的高频部分（AC交流）通过，而阻塞低频（DC直流）部分。许多串行传输方式中都使用了这种方法，因为它允许发送端和接收端的共模电压不同（共模电压指的是0、1电平交界处的电压），这意味着发送端和接收端可以使用不同的参考电压。当两个设备的物理连接距离很近时，这一特性优势并不明显，而若它们距离较远例如在不同的楼里，那么它们将很难使用一个完全相同的公共的参考电压。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image104.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image104.jpg)
 
 图 2‑29 电气物理层
 
@@ -478,13 +478,13 @@ u 多通道链路中的Lane-to-Lane歪斜去除（de-skew）。
 
 最后要介绍的一种在设备之间发送的流只使用物理层。尽管这种信息对于接收端来说很容易进行识别，但是它并没有被做成数据包的形式，原因是比如它没有包起始字符和包结束字符。因此作为一种替代方法，这种信息被组织成了一种被叫做“命令集（Ordered Sets）”的东西，它起始于发送端的物理层，终止于接收端的物理层，如图 2‑30所示那样。对于Gen1和Gen2的数据率下，一个命令集使用一个单独的COM字符作为起始，然后后面接着3个或以上的其他字符用于定义要发送的信息。关于这些不同类型字符在PCIe中的命名的更细节的讨论请见“Character Notation”一节，对于现阶段来说只要知道COM字符的特性能让我们达到想要的设计目标即可。命令集的大小总是4byte的整数倍，图 2‑31展示了一个命令集的例子。在Gen3操作模式中，命令集的格式就不同于上述的Gen1/Gen2格式了。更多详细内容请见Chapter 14“Link Initialization & Training”。命令集永远只会终止于链路的对端设备，而不会被Switch路由转发至PCIe网络中，也就是说对端设备如果是Switch那么它的最终目的地就是Switch。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image106.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image106.jpg)
 
 图 2‑30命令集的出发地和目的地
 
 命令集在链路训练（Link Training）过程中同样有应用，请参阅Chapter 14“Link Initialization & Training”。它们也被用于补偿发送端和接收端内部时钟的轻微差异，这一过程被称为时钟容忍度补偿（clock tolerance compensation）。最后一点，命令集还可以用于指示链路进入或者退出低功耗状态。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image108.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image108.jpg)
 
 图 2‑31命令集结构
 
@@ -496,7 +496,7 @@ u 多通道链路中的Lane-to-Lane歪斜去除（de-skew）。
 
 关于我们开始讨论的第一部分，请参考图 2‑32。Requester的Device Core或者说是软件层将会向事务层发起一个请求，这个请求中包含了这些信息：32bit或64bit的memory地址、事务类型、需要读取的数量总量（以dw为单位计数）、流量类型、字节使能、属性等等。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image110.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image110.jpg)
 
 图 2‑32 Memory Read请求的各阶段
 
@@ -518,7 +518,7 @@ Requester的物理层接收到Ack DLLP后，对其组帧符号进行检查和剥
 
 下面开始介绍此次举例回顾PCIe协议的另一半内容，请参考图 2‑33。为了服务MRd请求，Completer的Device Core/软件层将会向它的事务层发送一个带有数据的完成包（Completion with Data，CplD）请求，这个完成包请求中包含了与MRd请求中相同的Requester ID、Tag，还包含了事务类型以及另外的完成包头内容，并且完成包中还包含了被请求的数据。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image112.jpg)
+![img](img/2%20PCIe%20%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0/clip_image112.jpg)
 
 图 2‑33带有数据的完成包的各阶段
 

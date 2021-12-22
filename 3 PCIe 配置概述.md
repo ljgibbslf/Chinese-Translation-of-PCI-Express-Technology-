@@ -16,7 +16,7 @@
 
 正如PCI一样，每个PCIe功能（Function）在其所在的设备内，以及这个设备所连接的总线内，都是被唯一标识的。这个唯一的标识符一般被称为“BDF”。配置软件负责在一个给出的PCIe拓扑中检测出每个Bus、Device和Function，这就是BDF。接下来的几节将会结合一个PCIe拓扑示例的上下文，来讨论BDF的主要特征。图 3‑1展示了一个PCIe拓扑结构，图中着重标识了示例系统中的Buses、Devices和Functions。在本章的后面，将解释如何分配总线号和设备号。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image114.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image114.jpg)
 
 图 3‑1示例系统
 
@@ -48,7 +48,7 @@ u 电源管理
 
 u MSI、MSI-X
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image116.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image116.jpg)
 
 图 3‑2 PCI兼容配置寄存器空间
 
@@ -56,7 +56,7 @@ u MSI、MSI-X
 
 在阅读下面的讨论内容时，请同时参阅图 3‑3。当引入PCIe之后，最初始的256byte配置空间已经不足以放下所有的新的需要的Capability Structure了。因此配置空间的大小从原先的每个Function 256Byte扩展至了每个Function 4KByte。新增加出来的960DW扩展配置空间只能通过增强配置机制（Enhanced configuration mechanism）来进行访问，因此这部分区域对于传统的PCI软件是不可见的，因为它无法发现这个区域并进行访问。在扩展配置空间内包含了新增加的PCIe可选扩展能力寄存器（Extended Capability register），通过图 3‑3就可以看到一些被罗列出来的扩展能力寄存器（列出来的并非全部）。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image118.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image118.jpg)
 
 图 3‑3每个PCIe Function所拥有的4KB配置空间
 
@@ -92,7 +92,7 @@ PCI兼容机制使用RC的Host Bridge中的两个32bit的IO端口。它们分别
 
 配置地址端口仅在处理器对其完成一个完整的32bit写操作时，锁存住写入的信息，如图 3‑4，若对这个端口进行读操作则会返回它的这些内容。写入配置地址空间的信息必须遵照下面所描述的模板（图 3‑4）。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image120.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image120.jpg)
 
 图 3‑4地址位于0CF8h的配置地址端口
 
@@ -124,7 +124,7 @@ u Bit[31]为使能位，若要将随后的对配置数据端口的IO访问转换
 
 RC中的Host/PCI Bridge会将写入配置地址端口（Configuration Address Port）的信息锁存起来，如图 3‑1。若bit 31被置为1且目标总线在当前Bridge下方从属总线范围内，那么Bridge将把接下来的处理器对配置数据端口（Configuration Data Port）的访问转换成针对Bus 0的配置请求。处理器将会向配置数据端口（0CFCh）发起一个IO读请求或者一个IO写请求。这促使Bridge生成一个配置请求，这个配置请求是读请求还是写请求取决于IO访问是读还是写。若目标总线为Bus 0，那么它将是一个Type 0配置请求。若目标总线是从属总线范围内的其他总线，那么它将是一个Type 1配置请求。若目标总线不在从属总线范围内，那么这个Bridge将不会对这个请求进行转发操作。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image122.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image122.jpg)
 
 图 3‑5 单Root系统
 
@@ -150,7 +150,7 @@ RC中的Host/PCI Bridge会将写入配置地址端口（Configuration Address Po
 
 ¡ 否则，这个访问将被转换成Type 1配置访问。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image124.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image124.jpg)
 
 图 3‑6多Root系统
 
@@ -162,7 +162,7 @@ RC中的Host/PCI Bridge会将写入配置地址端口（Configuration Address Po
 
 为了处理这个映射，每个Function的4KB配置空间都以一个4KB对齐的地址作为起始地址，且这些4KB配置空间所映射的地址都要位于那段为了配置访问而预留的256MB内存地址空间内。并且现在的地址中的bit还携带了识别信息（identifying information），用于表示哪一个Function是访问目标（见表 3‑1）。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image126.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image126.jpg)
 
 表 3‑1增强型配置机制的内存映射地址范围
 
@@ -188,7 +188,7 @@ Bridge为了响应配置请求，将会产生两种类型的配置请求，分�
 
 如图 3‑7中给出了Type 0配置写请求和读请求的Header格式。在读写两种情况下，Type字段都是00100，而Format（Fmt）字段则用于指示是读请求还是写请求。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image128.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image128.jpg)
 
 图 3‑7 Type 0配置读请求和写请求的Header
 
@@ -202,7 +202,7 @@ n 若目标总线号不是当前Bridge的次级总线，但是在从属总线范
 
 如展示了Type 1配置读请求和写请求的Header格式。在读写两种情况下，Type字段域都是00101，而Format（Fmt）字段则用来指示这是读还是写。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image130.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image130.jpg)
 
 图 3‑8 Type 1配置读请求和写请求的Header
 
@@ -280,7 +280,7 @@ n 地址[1:0]用于定义选中的DW中的起始byte的位置（本例中为byte
 
 处理器发起一个2byte的memory read，读取的起始地址为E0400000h，这个地址会被RC中的Host Bridge锁存下来。Host Bridge识别到这个地址位于用来进行配置的区域之内，它将产生一个配置读请求，读取的位置为Bus 4—Device 0—Function 0—dword 0—首两个字节。剩下的操作就跟前面的小节中所讲的一样了，也就是如何把读出来的信息通过完成包返回给Host。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image132.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image132.jpg)
 
 图 3‑9配置读访问示例
 
@@ -292,7 +292,7 @@ n 地址[1:0]用于定义选中的DW中的起始byte的位置（本例中为byte
 
 在完成了系统上电或是复位之后，配置软件需要扫描PCIe网络结构，来搜索发现整个机器的拓扑，并学习这个网络结构是如何被填充的（例如里面都有多少总线、多少设备以及它们的编号等等）。在这进行之前，如图 3‑10所示，软件唯一知道的就是拓扑中有一个Host/PCI Bridge以及这个Bridge的次级总线Bus 0。需要注意，一个Bridge自身上方相连的总线称为主总线（Primary Bus），而这个Bridge自身下方相连的总线称为次级总线（Secondary Bus）。扫描PCIe结构来发现整体拓扑结构的过程被称为枚举过程。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image134.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image134.jpg)
 
 图 3‑10刚启动时软件所认为的拓扑结构
 
@@ -318,7 +318,7 @@ n 地址[1:0]用于定义选中的DW中的起始byte的位置（本例中为byte
 
 除了系统复位之后的那一段时间之外，RC处理配置读请求的CRS（配置重试状态）完成包的方式是特定实现的而不是通用的。而在系统复位后的那一小段时间里，RC有两个可以进行的操作供选择，选择哪一种则取决于Root控制寄存器（Root Control Register）中CRS Software Visibility这一bit的值（如图 3‑11）。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image136.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image136.jpg)
 
 图 3‑11 PCIe能力块中的Root控制寄存器
 
@@ -338,7 +338,7 @@ n 2 = 插件卡Bridge（CardBus Bridge，现在很少使用的遗留接口）
 
 在图 3‑1中，每个虚拟P2P的Header Type字段（DW3，byte2）的返回值都为1，且PCI Express-to-PCI Bridge（Bus 8，Device 0）的Header Type字段也将返回1。但是对于EP来说，它返回的Header Type字段是0。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image138.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image138.jpg)
 
 图 3‑12 Header类型寄存器
 
@@ -488,7 +488,7 @@ n 从属总线号（Subordinate Bus Number）=255
 
 每个Bridge中最终的主总线号、次级总线号和从属总线号可以参阅图 3‑9。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image140.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image140.jpg)
 
 图 3‑13单Root系统
 
@@ -532,7 +532,7 @@ n 从属总线号（Subordinate Bus Number）=255
 
 \6.    这样就完成了次级RC的枚举过程。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image142.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image142.jpg)
 
 图 3‑14多Root系统
 
@@ -556,7 +556,7 @@ MindShare Arbor是一个很棒的参考学习工具，可以用它来代替书�
 
 访问[www.mindshare.com/arbor](http://www.mindshare.com/arbor)即可免费下载MindShare Arbor的试用版。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image144.jpg)
+![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image144.jpg)
 
 图 3‑15 MindShare Arbor的部分截图
 
