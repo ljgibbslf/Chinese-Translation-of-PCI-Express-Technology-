@@ -22,7 +22,7 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 #### 工作分配
 翻译:
 
-- Chapter 1-8,完成撒花,Michael
+- Chapter 1-8,完成撒花,Michael ZZY
 - Chapter 11,进行中,Zokion,21/12/22 + 12weeks
 - Chapter 12,进行中,F.B.,21/12/22 + 12weeks
 - Chapter 14,进行中,ljgibbs,21/12/22 + 8weeks
