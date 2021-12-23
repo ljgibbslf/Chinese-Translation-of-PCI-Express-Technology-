@@ -20,7 +20,7 @@
 
 支持高级别的服务给系统性能提出了一些要求。例如，传输速率需要足够的高，这样才能满足应用在一个时间范围内传输足够多的数据的需求，同时这也使得应用能够适应与其他流量之间的竞争。另外，传输时延也需要足够低，这样才能确认数据包及时传输到达，避免出现延迟问题。最后，必须要对错误处理进行管理，这样它才不会影响到需要及时传输的数据包的传输。要实现上述这些目标，需要有一些特殊的硬件元素，其中一种就是一组称为Virtual Channel Capability Block（虚拟通道能力块）的配置寄存器组，如图 7‑1所示。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image316.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image316.jpg)
 
 图 7‑1虚拟通道能力寄存器
 
@@ -28,7 +28,7 @@
 
 我们所需要的第一件事情是要用一种方式来区分各种流量，也就是需要用一些东西来区分哪些数据包具有高优先级。这种需求是通过为数据包标明流量类型（TC）来完成的，流量类型（TC）中定义了8个优先级，它通过TLP Header中的3bit TC字段来表示（TC 0-7，数字越大优先级越高）。图 7‑2所示的32位memory请求的TLP Header中标识出了TC字段的位置。在初始化过程中，设备驱动程序会与同步管理软件（Isochronous Management software）沟通服务的级别，同步管理软件会返回相应的TC值来使用各种流量类型的数据包。然后驱动程序就会给数据包分配正确的TC优先级。TC值默认为0，这样就可以让不需要高优先级服务的数据包不会干扰到那些需要高优先级服务的数据包。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image318.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image318.jpg)
 
 图 7‑2 TLP Header中的流量类型（TC）字段
 
@@ -54,7 +54,7 @@ n 一个TC只能映射到一个VC，而可以有多个TC映射到同一个VC。
 
 所使用的虚拟通道的数量取决于链路两端设备所能共享的最大虚拟通道资源容量。软件会为每个VC分配ID，并且会将TC映射至VC。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image320.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image320.jpg)
 
 图 7‑3 TC到VC的映射举例
 
@@ -62,13 +62,13 @@ n 一个TC只能映射到一个VC，而可以有多个TC映射到同一个VC。
 
 软件会检查连接在公共链路上的设备所能支持的VC的数量，并且一般会选择链路两端设备所能支持的最大数量作为VC的实际使用数量。考虑如图 7‑4所示的拓扑示例，在这里，Switch上的每个端口（port）都支持全部的8个VC，而设备A仅支持默认的VC0，设备B支持4个VC，设备C支持8个VC。需要注意，虽然Switch的端口A能够支持8个VC，但是由于设备A仅能支持VC0，因此端口A的其余7个VC是无法被使用的。相似地，Switch的端口B实际也仅能使用4个VC。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image322.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image322.jpg)
 
 图 7‑4一个设备支持多个虚拟通道
 
 配置软件要确定每个端口所能支持的最大VC数量，它是通过读取虚拟通道能力寄存器组（Virtual Channel Capability register，图 7‑1）中的Extended VC Count字段来完成的，这个字段如图 7‑5所示。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image324.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image324.jpg)
 
 图 7‑5扩展VC支持字段
 
@@ -102,7 +102,7 @@ VC能力寄存器提供了三种基本的VC仲裁方式：
 
 \3.    **硬件固定仲裁（Hardware Fixed arbitration****）**：仲裁方案构建在硬件中。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image326.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image326.jpg)
 
 图 7‑6 VC仲裁示例
 
@@ -110,7 +110,7 @@ VC能力寄存器提供了三种基本的VC仲裁方式：
 
 默认的优先级方案是基于VC ID的固有优先级（VC0=最低优先级，VC7=最高优先级）。这种机制是自动的，并不需要任何额外配置。图 7‑7展示了一个严格优先级仲裁的例子，它包含了所有的8个VC，这其中使用VC ID号来管理事务的发送顺序。使用严格优先级仲裁的VC的最大编号不能大于扩展VC计数（Extended VC Count）字段（如图 7‑5）。此外，如果设计者选择让所有的VC都使用严格优先级仲裁，那么图 7‑8中的Port VC Capability Register 1（端口VC能力寄存器1）的Low Priority Extended VC Count字段需要固定为0。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image328.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image328.jpg)
 
 图 7‑7严格优先级仲裁
 
@@ -126,7 +126,7 @@ n Switch可以在出口端口（egress port）调节多个流量。这种方法�
 
 图 7‑8展示了Port VC Capability Register 1（端口VC能力寄存器1 ）的Low Priority Extended VC Count字段。这个只读（read-only）字段指定了该设备低优先级仲裁组的VC ID上限。例如，如果这个字段的值是4，那么就说明VC0-VC4都属于低优先级组，而剩下的VC5-VC7则是高优先级组。注意，若Low Priority Extended VC Count的值为7，则说明没有VC使用严格优先级。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image330.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image330.jpg)
 
 图 7‑8低优先级扩展VC计数
 
@@ -136,11 +136,11 @@ n 基于硬件的固定仲裁（Hardware Based Fixed Arbitration）
 
 n 加权轮询仲裁WRR（Weighted Round Robin Arbitration）
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image332.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image332.jpg)
 
 图 7‑9 VC仲裁能力字段
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image334.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image334.jpg)
 
 图 7‑10 VC仲裁优先级（分组仲裁）
 
@@ -154,7 +154,7 @@ n 加权轮询仲裁WRR（Weighted Round Robin Arbitration）
 
 在这种方法中，某些VC可以被给予比其他VC更大的权重（更高的优先级），这些高权重VC会比其他VC得到更多的entries（条目），也就是更多的发送数据包的机会。协议规范定义了三种WRR选项，每种选项都具有不同数量的entries（称为phase“阶段”）。表项的大小通过往Port VC Control Register（端口VC控制寄存器，图 7‑9）中的VC Arbitration Select（VC仲裁选择）字段写入相应的值来进行选择。表项中的每个条目都代表一个软件使用低优先级VC的阶段。VC仲裁器会以连续的方式反复的扫描表项的所有条目，然后会通过表项条目内指定的VC来发送数据包。一旦一个数据包被发出，那么仲裁器就会马上去扫描下一个条目（entry），也就是进入下一个阶段（phase）。图 7‑11展示了一个拥有64个条目的WRR仲裁表。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image336.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image336.jpg)
 
 图 7‑11 WRR VC仲裁表
 
@@ -164,13 +164,13 @@ VC Arbitration Table（VAT，VC仲裁表）位于配置空间中，它的具体�
 
 如图 7‑13所示，VAT（VC Arbitration Table）中的每个条目都是一个4bit字段，它用来指示这个阶段中需要发送数据的VC的ID号。整个VAT表的长度（有多少条目）是通过图 7‑9中的仲裁选项来进行选择的。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image338.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image338.jpg)
 
 图 7‑12 VC仲裁表偏移字段以及加载VC仲裁表字段
 
 这个表由配置软件加载，以实现虚拟通道所需要的优先级顺序。当表发生了任何变化时，硬件会设置VC Arbitration Table Statue bit（VC仲裁表状态位），这为软件提供了一个途径来验证表项虽然发生的改变但是还没有真正作用在硬件上。一旦表被加载完成，软件就会设置端口VC控制寄存器（图 7‑9）中的Load VC Arbitration Table bit（加载VC仲裁表位）。这会使得硬件对新的表项进行加载，将新的值应用在VC仲裁器中。当表项被加载完成并应用后，硬件就会清除VC Arbitration Table Statue bit（VC仲裁表状态位），这也就通知了软件关于表项加载的操作已经完成。这种表项加载的方式的动机可能是为了在系统运行中也能更改表内容而不中断系统的运行。但是问题是配置写操作一次仅能更新1DW的表内容，它是一种相对慢速的事务，这也就意味着需要一段比较长的时间才能完成整个表内容的更新，而在这段时间里这个表仅仅进行了部分更新。换句话说，这有可能会导致设备在这段时间里继续运行时出现意料之外的行为。为了避免这种情况，这种机制允许软件完成对整个表的更改之后，在统一的一次将它们全部应用在硬件仲裁器中。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image340.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image340.jpg)
 
 图 7‑13加载VC仲裁表条目
 
@@ -198,11 +198,11 @@ n 某些RC出口端口，它们通向的目的地是主存
 
 因为出口端口的每个VC的端口仲裁都是独立管理的，所以每个支持可编程的端口仲裁的VC都需要有一个单独的仲裁表，如图 7‑15所示。只有Switch和RC端口才支持端口仲裁表，EP内是不允许使用端口仲裁表的。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image342.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image342.jpg)
 
 图 7‑14端口仲裁概念
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image344.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image344.jpg)
 
 图 7‑15每个VC的端口仲裁表
 
@@ -218,7 +218,7 @@ n 某些RC出口端口，它们通向的目的地是主存
 
 \5.    端口仲裁逻辑决定每组入口Buffer发送事务的顺序。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image346.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image346.jpg)
 
 图 7‑16端口仲裁缓冲
 
@@ -226,7 +226,7 @@ n 某些RC出口端口，它们通向的目的地是主存
 
 实际上端口仲裁的机制的定义与VC仲裁所使用的模型比较相似。配置软件通过读取图 7‑17所示的寄存器来确定端口的能力，并为每个VC选择端口仲裁方案。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image348.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image348.jpg)
 
 图 7‑17软件选择端口仲裁方案
 
@@ -248,7 +248,7 @@ n 某些RC出口端口，它们通向的目的地是主存
 
 基于时间的WRR仲裁所支持的最大长度的仲裁表含有128个阶段，但是一个具体的VC可用的仲裁表条目实际数量可能会低于这个数值。这个值是由硬件初始化，并通过每个支持TBWRR的VC的Maximum Time Slots字段来进行表示，这个字段如图 7‑18所示。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image350.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image350.jpg)
 
 图 7‑18最大时隙寄存器
 
@@ -266,7 +266,7 @@ n 11b：8bits（256个端口）
 
 配置软件通过将各端口号填入仲裁表来完成仲裁表的加载，以实现支持的每个VC所需的端口优先级功能。如图 7‑19所示，仲裁表的格式取决于每个条目的实际大小以及该设计中所支持的阶段的数量。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image352.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image352.jpg)
 
 图 7‑19端口仲裁表格式
 
@@ -274,7 +274,7 @@ n 11b：8bits（256个端口）
 
 现在让我们考虑一个3端口Switch的例子，以此来对端口仲裁和VC仲裁进行举例讲解。我们在示例中假设，由入口端口0和入口端口1接收的数据包会向上行移动，而端口2则是面向上行的出口端口（也就是面向RC）。下面的关于这个示例的讨论可以参照图 7‑20。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image354.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image354.jpg)
 
 图 7‑20 Switch中的仲裁示例
 
@@ -298,7 +298,7 @@ n 11b：8bits（256个端口）
 
 在协议规范中描述了这种仲裁的两种情况。第一种情况，如图 7‑21所示，EP中虽然有两个Function，但是只有Function 0中含有VC能力寄存器（VC Capability Registers），并且所有的Function的任务分配都是相同的。对于这种情况，Function之间的仲裁方式将按照一些厂商指定（Vendor-Specific）的方法去进行。这是最简单的方法，但是这无法在内部包含一个标准结构用于定义不同Function的请求的优先级，因此它无法支持QoS。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image356.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image356.jpg)
 
 图 7‑21简单的多Function仲裁
 
@@ -308,7 +308,7 @@ n 11b：8bits（256个端口）
 
 在图 7‑22中可以看到，MFVC寄存器仅存在于Function 0中，并定义了此接口使用的VC以及仲裁方法。MFVC寄存器组看起来与VC能力寄存器组十分相似，它可以支持VC仲裁与Function仲裁。由于来自多个不同Function的数据包有可能在同时访问同一个VC，因此就需要Function仲裁来决定不同Function数据包之间的优先级。这种方式在现在看来应该是非常熟悉的，因为它与此前的端口仲裁其实是相同的概念，甚至连仲裁方法选项都是一样的，包括TBWRR。VC仲裁选项也与单Function VC寄存器中的仲裁选项相同。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image358.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image358.jpg)
 
 图 7‑22多Function仲裁中的QoS支持
 
@@ -328,7 +328,7 @@ n 11b：8bits（256个端口）
 
 \3.    在SI 2中，录音机接收到数据，并将这些输入数据缓存起来，随后这些数据可以在SI 3被传递到存储介质来完成录制。摄像机也会在SI 3期间将Buffer B中的数据卸到链路上，同时也在SI 3内在Buffer A中积累新的数据，以此循环进行。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image360.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image360.jpg)
 
 图 7‑23同步事务的示例应用
 
@@ -372,7 +372,7 @@ PCIe使用TBWRR端口仲裁机制中的时隙（time slot）来定义同步等�
 
 在结束对EP的讨论之前，还需要注意关于链路操作的另一个问题，那就是流量控制。设备在同步等时路径上的接收Buffer必须要足够大，只要数据包是按照同步等时契约（Isochronous Contract）均匀的输入，那么这个Buffer就要大到在不需要任何反压的情况下能够处理预期的输入数据包流。此外，流控更新DLLP（Flow Control Update）的返回速度必须足够快，以此来避免传输停滞。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image362.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image362.jpg)
 
 图 7‑24同步等时系统示例
 
@@ -390,17 +390,17 @@ PCIe使用TBWRR端口仲裁机制中的时隙（time slot）来定义同步等�
 
 图 7‑25展示了我们的例子中数据包在两个EP间传送的时间点。粗线条的大箭头是来自视频设备的数据包，它具有已知确定的大小，并按照周期性的、确定性间隔的进行发送。细线条的小箭头则是代表来自SCSI驱动器的数据包，它具有较低的优先级且发送时间点是不可预知的。在EP中，数据包只需要简单的含有TC即可，但是Switch还需要确认执行了合适的时间规划方案。这是通过使用TBWRR来完成的，它将会指定在一个给定的时间点上，哪个端口可以进行访问，以及访问时间有多长。由于知道同步等时数据包的大小以及传送频率，这使得软件可以正确的安排时间规划，但是什么样的时间规划才是我们需要的呢？
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image364.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image364.jpg)
 
 图 7‑25同步等时数据包的注入
 
 首先，让我们通过一个简单的示例来回顾一下需要涉及到的参数。回忆一下，PCIe中基于参考时钟周期定义了时隙（time slot），而时隙的长度是由端口能力寄存器1（Port Capability Register 1）中的参考时钟字段（Reference Clock）所给定的。目前，这个字段的值只能是100ns，并且TBWRR仲裁表只能是128个条目的大小。服务间隔（Service Interval，SI）的长度就是它们的乘积，也就是12.8us。一个给定设备的带宽可以用下面给出的公式来表达，其中Y表示1个时隙中将要发送的数据量（协议规范中声明，必须要将配置过程中编程写入的Max Payload Size值用于这个带宽的计算中，也就是先假设1个时隙就能传输1个数据包），M表示的是时隙的数量，T表示整个SI长度。举例来说，如果我们选择Payload为128Byte，又已知SI为12.8us，那么对于分配的每个时隙来说，BW=10MB/s。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image366.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image366.jpg)
 
 现在让我们考虑一个更贴近实际的例子。假设链路工作在Gen2的速率，视频设备需要保证有100MB/s的带宽，且它将会发送数据荷载为512Byte的数据包，我们先假设1个时隙就能发送1个数据包，代入公式中得到M=2.5，也就是在这种情况下要在1个SI中发送2.5个512Byte数据包。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image368.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image368.jpg)
 
 但是实际上1个时隙中可以传输多少数据呢？这个问题的答案当然与链路速率以及链路宽度有关。在5.0Gb/s的速率下，每发送1个10bit符号就需要2ns，因此在每个同道中100ns则可以传输50个符号。如果数据包的大小是512Byte再加上28Byte左右的Header，那么使用x1链路传输大小为550个符号的数据包则需要11个时隙。在有需要的时候，可以让同一个端口得到连续的多个时隙，这是一种解决办法。由于将要发送的数据包的大小是确定一致的，我们不能真的就将M定为2.5个512Byte，而是应该将其定为3。对于我们的公式来说，在1个SI中发送3个512Byte的带宽实际上是120MB/s。这虽然高于我们的需求带宽，但是确实解决了我们的问题。由于刚才计算过传输550个符号需要11个时隙，那么传输3个就需要11×3=33个时隙，在1个SI中还留有95个时隙用作它用。在1个SI中的3个时隙组（每组11个）中，每一组内的11个时隙必须是连续相邻的，但是组与组之间可以是分开的。
 
@@ -412,13 +412,13 @@ PCIe使用TBWRR端口仲裁机制中的时隙（time slot）来定义同步等�
 
 现在我们假设SCSI控制器尝试发送更多的数据包，其数量已经超过了SI 1对它的许可数量，如图 7‑26所示。这是协议规范中提到的两个带宽分配问题中的第一个，它被称为“过载（oversubscription）”。这将会影响到同步等时流量，但是这个问题可以通过合理的规划TBWRR仲裁表就能比较容易的避免，因为在某个特定的时间点下，只有被仲裁选中的端口可以发送数据包。如果这个端口在发送完仲裁许可的数据包后依然有很多数据包在队列中等待发送，那么它也需要等到下一次被仲裁选中才能继续发送后续的部分数据包，对于这个例子中也就是SCSI控制器想在SI 1中多发送的那一个数据包实际上可能会放到SI 2中去发送。最终，这种“过载”会导致发送处的流控反压。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image370.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image370.jpg)
 
 图 7‑26超额使用带宽
 
 第二个问题被称为“拥塞（congestion）”，当在一个给定的时间窗口内存在了太多同步等时服务请求时，就有可能会发生这种问题，如图 7‑27所示。这个问题和第一个有点相似，但是它是无法那么简单就解决的。与之前的情况不同，这里不能将高优先级数据包推迟到下一个时隙发送，因此系统必须要有办法来处理全部的这些请求。要纠正拥塞的问题，软件需要改变发送数据包时间点的分布，以便它们都能够得到可用硬件带宽的支持。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image372.jpg)
+![img](img/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/clip_image372.jpg)
 
 图 7‑27带宽拥塞
 
