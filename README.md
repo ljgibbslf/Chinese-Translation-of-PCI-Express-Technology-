@@ -25,7 +25,7 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 - Chapter 1-8,完成撒花,Michael ZZY
 - Chapter 11,进行中,Zokion,21/12/22 + 12weeks
 - Chapter 12,进行中,F.B.,21/12/22 + 12weeks
-- Chapter 14,进行中,ljgibbs,21/12/22 + 8weeks
+- Chapter 14,进行中,ljgibbs,21/12/22 + 18weeks
 
 修订:
 
@@ -45,5 +45,6 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 
 #### 参与翻译/修订/维护
 Fulk-Pull/Issue 皆可
+
 有问题请联系仓库作者：lf_gibbs@163.com
 
