@@ -10,11 +10,11 @@
 
 ### 关于下一章
 
-下一章的内容将描述Function如何通过基址寄存器（Base Address Register，BARs）来请求memory或者IO地址空间，以及这种请求的目的与作用，并且将介绍软件是如何初始化这两种地址空间的。另外在下一章还会描述Bridge的Base/Limit寄存器（基/边界寄存器）是如何被初始化的，因为只有当Base/Limit寄存器初始化后Switch才能在PCIe网络中路由转发TLP。
+下一章的内容将描述Function如何通过基址寄存器（Base Address Register，BARs）来请求访问memory或者IO地址空间，以及这种请求的目的与作用，并且将介绍软件是如何初始化这两种地址空间的。另外在下一章还会描述Bridge的Base/Limit寄存器（基/边界寄存器）是如何被初始化的，因为只有当Base/Limit寄存器初始化后Switch才能在PCIe网络中路由转发TLP。
 
 ### 3.1 总线/设备/功能/的定义（Definition of Bus,Device and Function）
 
-正如PCI一样，每个PCIe功能（Function）在其所在的设备内，以及这个设备所连接的总线内，都是被唯一标识的。这个唯一的标识符一般被称为“BDF”。配置软件负责在一个给出的PCIe拓扑中检测出每个Bus、Device和Function，这就是BDF。接下来的几节将会结合一个PCIe拓扑示例的上下文，来讨论BDF的主要特征。图 3‑1展示了一个PCIe拓扑结构，图中着重标识了示例系统中的Buses、Devices和Functions。在本章的后面，将解释如何分配总线号和设备号。
+正如PCI一样，每个PCIe功能（Function）的标识在其所在的设备内，以及这个设备所连接的总线内，都是唯一的。其标识符一般被称为“BDF”。对于任意一个 PCIe 拓扑结构，配置软件负责检测出拓扑中的每个Bus、Device和Function，缩写为BDF。接下来的几节将会结合一个PCIe拓扑的示例，来讨论BDF的主要特征。图 3‑1展示了一个PCIe拓扑结构，图中着重标识了示例系统中的Buses、Devices和Functions。本章后续内容将解释总线编号和设备编号分配的过程。
 
 ![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image114.jpg)
 
@@ -22,31 +22,36 @@
 
 ### 3.2 PCIe总线（PCIe Buses）
 
-软件总舵可以分配256个总线号。最初的总线号，Bus 0，通常由硬件分配给RC（Root Complex）。Bus 0由一个带有内部集成EP的虚拟PCI总线，一些虚拟PCI-to-PCI Bridges（P2P）组成，这其中的P2P Bridges拥有确定写死（hard-coded）的设备号和功能号。每个P2P Bridge都会产生一个新的总线，额外的PCIe设备可以连接在这些总线上面。每个总线都必须被分配一个唯一的总线号。配置软件分配总线号的过程中，第一件事情就是从Bus 0/Device 0/Function 0开始搜索其他的Bridges。当找到一个Bridge之后，软件就给这个Bridge产生的新总线分配一个总线号，新总线的总线号会比Bridge所属的上一级总线的总线号要大。一旦新总线被分配了一个总线号之后，软件就会在这个新总线上开始搜索Bridges，而不是在上一级总线上继续搜索。这被称为“深度优先搜索（depth first search）”，关于这种搜索的细节内容，请参阅“Enumeration – Discovering the Topology”一节。
+软件总共可以分配256个总线编号。第一个总线号，Bus 0，通常由硬件分配给RC（Root Complex）。Bus 0由一个集成有EP的虚拟PCI总线，一到多个虚拟PCI-to-PCI Bridges（P2P）组成。其中的P2P Bridges拥有不可更改、硬件编码（hard-coded）的设备号和功能号。每个P2P Bridge都会产生一个新的总线，其他PCIe设备可以连接在到这些新产生的总线上去。每个总线都必须被分配一个唯一的总线号。配置软件分配总线号的过程中，首先从Bus 0/Device 0/Function 0开始搜索其他的Bridges。当找到一个Bridge之后，软件就给这个Bridge产生的新总线分配一个与上一级总线的总线号不同的、数字更大的编号。一旦新总线被分配了一个总线号之后，软件就会从新总线继续搜索更新的Bridges，而不是在上一级总线上继续搜索。这被称为“深度优先搜索（depth first search）”，关于这种搜索的细节内容，请参阅“Enumeration – Discovering the Topology”一节。
 
 ### 3.3 PCIe设备（PCIe Devices）
 
-PCIe允许在单个PCI总线上最多挂载32个设备，然而PCIe点对点（point-to-point）的性质意味着只有一个设备可以直接连接在PCIe链路上，该设备只能是Device 0。RC和Switches都含有虚拟PCI总线，这些虚拟总线使得可以让更多的设备“连接”在总线上。每个设备都必须实现Function 0，其最多可以有8个功能（Function）。当一个设备拥有2个或以上的Function时，便把这个设备成为多功能设备（Multi-Function Device）。
+PCIe允许在单个PCI总线上最多挂载32个设备，然而PCIe点对点（point-to-point）的性质意味着只有一个设备可以直接连接在PCIe链路上，也就是Device 0。RC和Switches都含有虚拟PCI总线，通过这些虚拟总线。更多的设备可以“连接”到总线上。
+
+每个设备都必须实现Function 0，其最多可以有8个功能（Function）。当一个设备拥有2个或以上的Function时，称之为多功能设备（Multi-Function Device）。
 
 ### 3.4 PCIe功能（PCIe Functions）
 
-正如此前所讨论的一样，Function是被设计在每个设备中的。这些Function可能包含硬盘驱动接口、显示控制器、以太网控制器、USB控制器等等。具有多Function的设备不需要依次来逐个实现它们。例如，一个设备可以实现Function 0、2、7。因此，当配置软件检测到了一个多Function设备时，必须检查所有可能的Function，以了解当前Device存在哪些Function。每个Function都有它们自己的配置地址空间，这个配置地址空间用于设置与Function相关的资源。
+正如此前所讨论的一样，Function被设计为每个设备中之内的一个逻辑层次。这些Function可能包含硬盘驱动接口、显示控制器、以太网控制器、USB控制器等等。多Function的设备不需要依次按照编号逐个实现 Function。例如，一个设备可以只实现Function 0、2、7。因此，当配置软件检测到了一个多Function设备时，必须检查所有可能的Function，以了解当前Device存在哪些Function。每个Function都有它们自己的配置地址空间，这个配置地址空间用于设置与Function相关的资源。
 
 ### 3.5 配置地址空间（Configuration Address Space）
 
-初期的PC需要用户设置开关和跳线来给每个安装上去的板卡分配资源，这样的方法经常会导致memory、IO和中断的设置出现冲突。这之后出现的两种IO架构——扩展ISA（EISA，Extended ISA）和IBM PS2系统，这二者是初次实现了即插即用（plug and play）的架构。在这些架构中，配置文件随每个插件卡一起被提供，允许系统软件分配基本资源。PCI扩展了这种能力，它通过实现标准化的配置寄存器，允许通用的Shrink-Wrapped（压缩包装）操作系统管理几乎所有的系统资源。当拥有了一个标准化的方式来进行错误报告的开启与关闭、传送中断、进行地址映射以及更多其他的操作之后，就使得可以通过一个实体——配置软件，来进行系统资源的分配和配置，这样做就可以消除几乎所有的资源冲突。
+初期的PC需要用户设置开关和跳线来给每个安装上去的板卡分配资源，这样的方法经常会导致memory、IO和中断的设置出现冲突。这之后出现的两种IO架构——扩展ISA（EISA，Extended ISA）和IBM PS2系统，是初次实现了即插即用（plug and play）的架构。在这些架构中，配置文件随每个插件卡一起被提供，允许系统软件分配基本资源。PCI扩展了这种能力，它通过实现标准化的配置寄存器，允许通用的Shrink-Wrapped（压缩包装）操作系统管理几乎所有的系统资源。在拥有了一个标准化的方式来进行错误报告的开启与关闭、传送中断、进行地址映射以及更多其他的操作之后，就可以通过配置软件这一单一模块，来进行系统资源的分配和配置，这消除了几乎所有的资源冲突。
 
-PCI为每个Function都定义了一个专用的配置地址空间块。映射入这个配置空间的寄存器们使得软件可以发现这个Function的存在，并对这个Function进行一般的操作和检查状态。大多数需要标准化的基本功能都存在于配置寄存器块的Header中，但是PCI架构师意识到若将可选功能（option feature，区别于前面的基本功能）也标准化可以带来很多好处，称这些可选功能标准化后的结构为“能力结构capability structures”，（例如电源管理、热插拔等等）。对于每个Function，都含有256byte的PCI兼容配置空间（PCI-Compatible configuration space）。
+PCI为每个Function都定义了一个专用的配置地址空间块。映射在这个配置空间中的寄存器们使得软件可以发现这个Function的存在，并对这个Function进行一般操作和状态检查。大多数需要标准化的基本功能都存在于配置寄存器块的Header中，但是PCI架构师意识到若将可选功能（option feature，区别于前面的基本功能）也标准化可以带来很多好处，称这些可选功能标准化后的结构为“能力结构”，（capability structures，例如电源管理、热插拔等等）。
+
+对于每个Function，都含有256byte的PCI兼容配置空间（PCI-Compatible configuration space）。
 
 #### 3.5.1     PCI兼容空间（PCI-Compatible Space）
 
-在阅读下面的讨论内容时，请同时参阅图 3‑2。之所以将这256Byte命名为PCI-compatible configuration space（PCI兼容配置空间），是因为这些配置空间原本就是为PCI所设计的。这个配置空间的前16DW（64bytes）就是配置头部（header），有两种类型的Header，分别为Type 0和Type 1。Type 0 Header对于每个Function都是必须含有的，除了Bridge，对于Bridge Function来说它使用的是Type 1 Header。剩余的48DW是一些可选寄存器，包括PCI能力结构（capability structure）。对于PCIe Functions，也需要capability structure中的一部分。例如PCIe Function就必须实现如下的能力结构：
+在阅读下面的讨论内容时，请同时参阅图 3‑2。之所以将这256Byte命名为PCI-compatible configuration space（PCI兼容配置空间），是因为这些配置空间原本就是为PCI所设计的。这个配置空间的前16DW（64bytes）是配置头部（header），有两种类型的Header，分别为Type 0和Type 1。Type 0 Header对于每个Function都是必须含有的，除了Bridge，对于Bridge Function来说它使用的是Type 1 Header。剩余的48DW是一些可选寄存器，包括PCI能力结构（capability structure）。对于PCIe Functions而言，一部分 capability structure中也是必须的。例如PCIe Function就必须实现如下的能力结构：
 
-u PCI Express能力（PCI Express Capability）
 
-u 电源管理
+- PCI Express能力（PCI Express Capability）
 
-u MSI、MSI-X
+- 电源管理
+
+- MSI、MSI-X
 
 ![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image116.jpg)
 
@@ -54,7 +59,7 @@ u MSI、MSI-X
 
 #### 3.5.2     扩展配置空间（Extended Configuration Space）
 
-在阅读下面的讨论内容时，请同时参阅图 3‑3。当引入PCIe之后，最初始的256byte配置空间已经不足以放下所有的新的需要的Capability Structure了。因此配置空间的大小从原先的每个Function 256Byte扩展至了每个Function 4KByte。新增加出来的960DW扩展配置空间只能通过增强配置机制（Enhanced configuration mechanism）来进行访问，因此这部分区域对于传统的PCI软件是不可见的，因为它无法发现这个区域并进行访问。在扩展配置空间内包含了新增加的PCIe可选扩展能力寄存器（Extended Capability register），通过图 3‑3就可以看到一些被罗列出来的扩展能力寄存器（列出来的并非全部）。
+在阅读下面的讨论内容时，请同时参阅图 3‑3。当引入PCIe之后，最初始的256byte配置空间已经不足以放下所有新需要的Capability Structure了。因此配置空间的大小从原先的每个Function 256Byte扩展至了每个Function 4KByte。新增加出来的960DW扩展配置空间只能通过增强配置机制（Enhanced configuration mechanism）来进行访问，因为传统的PCI软件无法发现这个区域并进行访问，所以这部分区域对于 PCI 是不可见的。在扩展配置空间内包含了新增加的PCIe可选扩展能力寄存器（Extended Capability register），图 3‑3罗列出了一部分扩展能力寄存器。
 
 ![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image118.jpg)
 
@@ -64,51 +69,51 @@ u MSI、MSI-X
 
 #### 3.6.1     整体说明（General）
 
-对Host-to-Bridge配置寄存器的访问不必使用前面的章节所提到的配置机制，它通常作为设备特定寄存器在内存地址空间中被实现，这是平台固件本身就知道的。然而，它的配置寄存器格式排布和用法都必须遵从PCI 2.3协议规范中所定义的Type 0模板。
+对Host-to-Bridge配置寄存器的访问不必使用前面的章节所提到的配置机制，在内存地址空间中，它通常映射为设备特定寄存器，这对平台固件是已知的。然而，它的配置寄存器格式排布和用法都必须遵从PCI 2.3协议规范中所定义的Type 0模板。
 
 #### 3.6.2     只有RC发送配置请求（Only the Root Sends Configuration Request）
 
-在协议规范中声明了，只有RC可以发起配置请求。RC作为了系统处理器的联络员，将请求包传入网络中并收回完成包。之所以仅限于处理器通过RC发起配置事务，是因为要是其他设备也有这种能力，那么这些设备可能会改变配置内容，这样就会带来混乱。
+在协议规范中声明了，只有RC可以发起配置请求。RC作为 CPU 与 PCIe 拓扑的联络员，其传入 CPU 的 PCIe 请求包并在 PCIe 事务完成后向处理器报告。之所以限制 CPU 只能通过RC发起配置事务，是因为要是其他设备也有这种能力，那么他们可以任意改变配置内容，这样就会带来混乱。
 
-由于只有RC能发起这些配置请求，所以这些配置请求只能在拓扑中向下转发，也就是它们无法从拓扑低层被向上转发回到RC，这就意味着Peer-to-Peer的配置请求是被禁止的。请求包使用目的设备ID作为路由信息进行路由转发，这个目的设备ID就是它的BDF（拓扑中的Bus编号，Bus上的Device编号，Device中的Function编号）。
+由于只有RC能发起这些配置请求，所以这些配置请求只能在拓扑中向下转发，意味着Peer-to-Peer的配置请求是被无法实现的。请求包使用目的设备ID作为路由信息进行路由转发，这个目的设备ID就是它的BDF（拓扑中的Bus编号，Bus上的Device编号，Device中的Function编号）。
 
 ### 3.7 生成配置事务（Generating Configuration Transactions）
 
-处理器一般无法直接完成读请求和写请求，因为他们只能产生memory请求和IO请求。这意味着RC需要将某些访问转换成配置请求，这样才能支持进行配置的操作过程。配置空间可以通过以下两种机制进行访问：
+处理器一般无法直接进行配置读写请求，因为他们只能产生memory请求和IO请求。这意味着RC需要将 CPU 的其他类型访问转换成配置请求，这样才能进行配置的操作过程。配置空间可以通过以下两种机制进行访问：
 
-u 传统的PCI配置机制，使用IO间接访问（IO-indirect access）
+- 传统的PCI配置机制，使用IO间接访问（IO-indirect access）
 
-u 增强型配置机制，使用内存映射访问（memory-mapped access）
+- 增强型配置机制，使用内存映射访问（memory-mapped access）
 
 #### 3.7.1     传统PCI机制（Legacy PCI Mechanism）
 
-在PCI协议规范中定义了IO-indirect方法，用来指示系统（RC或其等效系统）进行PCI配置访问。在当时的历史背景下，占主导地位的PC处理器（Intel x86）被设计为仅寻址64KB的IO地址空间。当PCI被定义出来的时候，这个有限的IO空间已经变得非常混乱，只有几个地址范围仍然可用：0800h-08FFh，和0C00h-0CFFh。因此，将所有可能的Function的配置寄存器都映射到IO空间是不可行的。与此同时，内存地址空间也十分有限，将这些配置空间都映射进内存地址空间也并不是一个好方法。于是，协议规范的作者使用了一种常用的方法来解决这个问题，使用间接地址映射（indirect address mapping）。为此，需要一个寄存器保存住目标地址，同时用第二个寄存器保存住来自或是发往目标的数据。先对地址寄存器进行写入，随后再对数据寄存器进行读取或写入，这样就完成了对目标Function正确的内部地址的一次读事务或是写事务。这很好的解决了地址空间有限的问题，但是这意味着产生一次配置访问需要两次IO访问。
+在PCI协议规范中定义了IO-indirect方法，用来指示系统（RC或其等效的组件）进行PCI配置访问。在当时的历史背景下，占主导地位的PC处理器（Intel x86）被设计为仅能寻址64KB的IO地址空间。在 PCI 协议产生的时候，这个有限的IO空间已经变得非常混乱，只有少数几个可用的地址范围：0800h-08FFh，和0C00h-0CFFh。因此，将所有可能的Function的配置寄存器都映射到IO空间是不可行的。与此同时，内存地址空间也十分有限，将这些配置空间都映射进内存地址空间也不是个好方法。于是，协议规范的作者使用了一种常用的方法来解决这个问题，使用间接地址映射（indirect address mapping）。为此，需要使用一个寄存器保存目标地址，同时用第二个寄存器保存来自或是发往目标的数据。一次对目标Function的一次读写事务，需要先将待访问的地址写入地址寄存器，随后再读写数据寄存器。这很好的解决了地址空间有限的问题，但是这意味着产生一次配置访问需要两次IO访问。
 
-PCI兼容机制使用RC的Host Bridge中的两个32bit的IO端口。它们分别是配置地址端口（Configuration Address Port），位于IO地址区域0CF8h-0CFBh，和配置数据端口（Configuration Data Port），位于IO地址区域0CFCh-0CFFh。
+PCI兼容机制使用RC的Host Bridge中的两个32bit的IO端口。它们分别是**配置地址端口**（Configuration Address Port），位于IO地址区域0CF8h-0CFBh，和**配置数据端口**（Configuration Data Port），位于IO地址区域0CFCh-0CFFh。
 
-要访问一个Function的PCI兼容配置寄存器，首先要将目标的Bus、Device、Function和DW号写入配置地址端口，并将其使能bit置为有效。然后第二步，一个1或2或4Byte的IO读或写将会发送到配置数据端口。RC的Host Bridge将对给定的目标总线和在Bridge下现存的总线范围进行比较。若目标总线在这个范围内，这个Bridge则会发起配置读请求或者配置写请求（这取决于对配置数据端口的IO访问是读操作还是写操作）。
+要访问一个Function的PCI兼容配置寄存器，首先要将目标的Bus、Device、Function和DW号写入配置地址端口，并将其使能bit置为有效。然后第二步，一个1或2或4Byte的IO读或写将会发送到配置数据端口。RC的Host Bridge将对给定的目标总线和在Bridge下现存的总线范围进行比较。若目标总线在这个范围内，这个Bridge则会发起配置读或写请求（这取决于对配置数据端口的IO访问是读操作还是写操作）。
 
 ##### 3.7.1.1   配置地址端口（Configuration Address Port）
 
-配置地址端口仅在处理器对其完成一个完整的32bit写操作时，锁存住写入的信息，如图 3‑4，若对这个端口进行读操作则会返回它的这些内容。写入配置地址空间的信息必须遵照下面所描述的模板（图 3‑4）。
+配置地址端口仅在处理器对其完成一个完整的32bit写操作时，锁存住写入的信息，如图 3‑4，若对这个端口进行读操作则会返回它的这些内容。写入配置地址空间的信息必须遵照下面所描述的格式（图 3‑4）。
 
 ![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image120.jpg)
 
 图 3‑4地址位于0CF8h的配置地址端口
 
-u Bits[1:0]是写死不变的且只读的，在读取时只能返回0。它的位置是DW对齐的，不允许字节特定（byte-specific）的偏移量。
+- Bits[1:0]固定为0不变，且只读的，在读取时只能返回**0**。它的位置是DW对齐的，不允许指定字节（byte-specific）偏移量。
 
-u Bits[7:2]用于标识目标Function的PCI兼容配置空间内的目标DW（target dword，其也被称作寄存器号），也就是用来标识Function内的寄存器号，要求这个寄存器必须位于兼容配置空间中。这种机制仅限于兼容的配置空间中使用。（例如一个Function配置空间的前64DW）。
+- Bits[7:2]用于标识目标Function的PCI兼容配置空间内的**目标DW**（target dword，其也被称作寄存器号），也就是用来标识Function内的寄存器号，要求这个寄存器必须位于兼容配置空间中。这种机制仅限于兼容 PCI 的配置空间中使用。（例如一个Function配置空间的前64DW）。
 
-u Bits[10:8]用于标识目标Device内的目标Function号(0-7)。
+- Bits[10:8]用于标识目标Device内的目标Function号(0-7)。
 
-u Bits[15:11]用于标识目标Device号(0-31)。
+- Bits[15:11]用于标识目标Device号(0-31)。
 
-u Bits[23:16]用于标识目标Bus号(0-255)。
+- Bits[23:16]用于标识目标Bus号(0-255)。
 
-u Bits[30:24]为保留字段，必须为0。
+- Bits[30:24]为保留字段，必须为0。
 
-u Bit[31]为使能位，若要将随后的对配置数据端口的IO访问转换为配置访问则必须要将该bit置为1。当该bit为0时，若有IO读或者IO写被发送到配置数据端口，那么这些事务都会被当成普通的IO请求来处理。
+- Bit[31]为使能位，若要将随后的对配置数据端口的IO访问转换为配置访问则必须要将该bit置为1。当该bit为0时，若有IO读或者IO写被发送到配置数据端口，那么这些事务都会被当成普通的IO请求来处理。
 
 ##### 3.7.1.2   总线比较和数据端口的使用（Bus Compare and Data Port Usage）
 
@@ -600,4 +605,14 @@ o 可以对USB结构体进行译码。
 
 o 可以对NVM Express结构体进行译码。
 
- 
+------
+
+原文：  Mindshare
+
+译者：  Michael ZZY
+
+校对：  LJGibbs
+
+欢迎参与 《Mindshare PCI Express Technology 3.0 一书的中文翻译计划》
+
+https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology
