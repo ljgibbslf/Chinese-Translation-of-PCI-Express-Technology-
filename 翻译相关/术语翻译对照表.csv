@@ -1,4 +1,14 @@
 原文,译文,注释
-Lane,,
-Ordered set,字符序列,遵循 <<PCIE 体系结构导读>>
-Symbol,,,
+lane,,
+symbol,,,
+block,,,
+bit lock,,,
+symbol lock,,,
+blcok locl,,,
+ordered set,字符序列,参考 <<PCIE 体系结构导读>>
+bus,,,
+device,,,
+function,功能,,
+end point,,,
+root complex,,,
+capability structures,能力结构,?,
