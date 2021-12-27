@@ -32,7 +32,7 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 - Chapter 1,初校完成,ljgibbs,21/12/23
 - Chapter 2,进行中,XTang,21/12/22 + 2weeks
 - Chapter 3,进行中,ljgibbs,21/12/23 + 2weeks
-- TBD,ᝰꫛꫀꪝ
+- Chapter 4,进行中,Karl_DGR,21/12/28 + 3weeks
 
 首席合作新媒体:
 
