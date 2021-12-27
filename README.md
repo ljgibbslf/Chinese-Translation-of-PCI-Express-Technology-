@@ -34,6 +34,10 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 - Chapter 3,进行中,ljgibbs,21/12/23 + 2weeks
 - Chapter 4,进行中,Karl_DGR,21/12/28 + 3weeks
 
+选择章节中:
+
+- DZG
+
 首席合作新媒体:
 
 - 贝塔君-摸鱼范式
