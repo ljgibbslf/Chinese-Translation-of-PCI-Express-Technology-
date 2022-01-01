@@ -26,7 +26,7 @@
 
 ### 3.3 PCIe设备（PCIe Devices）
 
-PCIe允许在单个PCI总线上最多挂载32个设备，然而PCIe点对点（point-to-point）的性质意味着只有一个设备可以直接连接在PCIe链路上，也就是Device 0。RC和Switches都含有虚拟PCI总线，通过这些虚拟总线。更多的设备可以“连接”到总线上。
+PCIe允许在单个PCI总线上最多挂载32个设备，然而PCIe点对点（point-to-point）的性质意味着只有一个设备可以直接连接在PCIe链路上，也就是Device 0。但是，通过RC和Switches包含的虚拟PCI总线。更多的设备可以“连接”到总线上。
 
 每个设备都必须实现Function 0，其最多可以有8个功能（Function）。当一个设备拥有2个或以上的Function时，称之为多功能设备（Multi-Function Device）。
 
@@ -36,15 +36,15 @@ PCIe允许在单个PCI总线上最多挂载32个设备，然而PCIe点对点（p
 
 ### 3.5 配置地址空间（Configuration Address Space）
 
-初期的PC需要用户设置开关和跳线来给每个安装上去的板卡分配资源，这样的方法经常会导致memory、IO和中断的设置出现冲突。这之后出现的两种IO架构——扩展ISA（EISA，Extended ISA）和IBM PS2系统，是初次实现了即插即用（plug and play）的架构。在这些架构中，配置文件随每个插件卡一起被提供，允许系统软件分配基本资源。PCI扩展了这种能力，它通过实现标准化的配置寄存器，允许通用的Shrink-Wrapped（压缩包装）操作系统管理几乎所有的系统资源。在拥有了一个标准化的方式来进行错误报告的开启与关闭、传送中断、进行地址映射以及更多其他的操作之后，就可以通过配置软件这一单一模块，来进行系统资源的分配和配置，这消除了几乎所有的资源冲突。
+初期的PC需要用户设置开关和跳线来给每个安装上去的板卡分配资源，这样的方法经常会导致memory、IO和中断的设置出现冲突。这之后出现的两种IO架构——扩展ISA（EISA，Extended ISA）和IBM PS2系统，是初次实现了即插即用（plug and play）的架构。在这些架构中，配置文件随每个插件卡一起被提供，允许系统软件分配基本资源。PCI扩展了这种配置特性，它通过实现标准化的配置寄存器，允许通用的Shrink-Wrapped（压缩包装）操作系统管理几乎所有的系统资源。PCI 在拥有了一个标准化的方式来进行错误报告的开启与关闭、传送中断、进行地址映射以及更多其他的操作之后，就可以通过配置软件这一单一模块，来进行系统资源的分配和配置，这消除了几乎所有的资源冲突。
 
-PCI为每个Function都定义了一个专用的配置地址空间块。映射在这个配置空间中的寄存器们使得软件可以发现这个Function的存在，并对这个Function进行一般操作和状态检查。大多数需要标准化的基本功能都存在于配置寄存器块的Header中，但是PCI架构师意识到若将可选功能（option feature，区别于前面的基本功能）也标准化可以带来很多好处，称这些可选功能标准化后的结构为“能力结构”，（capability structures，例如电源管理、热插拔等等）。
+PCI为每个Function都定义了一个专用的配置地址空间块。映射在这个配置空间中的寄存器们使得软件可以发现这个Function的存在，并对这个Function进行一般操作和状态检查。大多数需要标准化的基本功能都存在于配置寄存器块的Header中，但是PCI架构师意识到若将可选功能（option feature，区别于前面的基本功能）也标准化可以带来很多好处，这些可选功能标准化后的结构被称为“能力结构”，（capability structures，例如电源管理、热插拔等等）。
 
 对于每个Function，都含有256byte的PCI兼容配置空间（PCI-Compatible configuration space）。
 
 #### 3.5.1     PCI兼容空间（PCI-Compatible Space）
 
-在阅读下面的讨论内容时，请同时参阅图 3‑2。之所以将这256Byte命名为PCI-compatible configuration space（PCI兼容配置空间），是因为这些配置空间原本就是为PCI所设计的。这个配置空间的前16DW（64bytes）是配置头部（header），有两种类型的Header，分别为Type 0和Type 1。Type 0 Header对于每个Function都是必须含有的，除了Bridge，对于Bridge Function来说它使用的是Type 1 Header。剩余的48DW是一些可选寄存器，包括PCI能力结构（capability structure）。对于PCIe Functions而言，一部分 capability structure中也是必须的。例如PCIe Function就必须实现如下的能力结构：
+在阅读下面的讨论内容时，请同时参阅图 3‑2。之所以将这256Byte命名为PCI-compatible configuration space（PCI兼容配置空间），是因为这些配置空间原本就是为PCI所设计的。这个配置空间的前16DW（64bytes）是配置头部（header），有两种类型的Header，分别为Type 0和Type 1。Type 0 Header对于每个Function都是必须含有的，除了Bridge，对于Bridge Function来说它使用的是Type 1 Header。剩余的48DW是一些可选寄存器，包括PCI能力结构（capability structure）。对于PCIe Functions而言，一部分 capability structure也是必须的。例如PCIe Function就必须实现如下的能力结构：
 
 
 - PCI Express能力（PCI Express Capability）
@@ -117,11 +117,11 @@ PCI兼容机制使用RC的Host Bridge中的两个32bit的IO端口。它们分别
 
 ##### 3.7.1.2   总线比较和数据端口的使用（Bus Compare and Data Port Usage）
 
-如图 3‑5，RC内的Host Bridge实现了一个“次级总线号寄存器（Secondary Bus Number）”和一个“从属总线号寄存器（Subordinate Bus Number）”。次级总线号（图 3-5 中的 Sec）指的是当前Bridge下直接连接的总线的编号，例如图中RC的Host/PCI Bridge产生了Bus 0，因此Host/PCI Bridge的次级总线号就是0。从属总线号（图 3-5 中的 Sub）指的是Bridge之下的可作为目标总线的总线号，例如图中Device 1的Sub=9，那么就说明在Device 1下游最大的总线号是 Bus 9，而它的Sec=5则说明其下游的总线号编号从 Bus 5 开始，简单来说就是Sec和Sub共同指定出了这个设备下可访问总线的范围（对于Device 1来说就是5-9）。
+如图 3‑5，RC内的Host Bridge实现了一个次级总线号（Secondary Bus Number）寄存器和一个从属总线号（Subordinate Bus Number）寄存器。次级总线号（图 3-5 中的 Sec）指的是当前Bridge下直接连接的总线的编号，例如图中RC的Host/PCI Bridge产生了Bus 0，因此Host/PCI Bridge的次级总线号就是0。从属总线号（图 3-5 中的 Sub）指的是Bridge之下的可作为目标总线的总线号，例如图中Device 1的Sub=9，那么就说明在Device 1下游最大的总线号是 Bus 9，而它的Sec=5则说明其下游的总线号编号从 Bus 5 开始，简单来说就是Sec和Sub共同指定出了这个设备下可访问总线的范围（对于Device 1来说就是5-9）。
 
 在一个单RC的系统中，Host-Bridge的次级总线号应该被固定为0，也就是它的可读可写的次级总线号寄存器从一复位就被强制置为0，或者说，Host-Bridge知道它访问到的第一个总线一定是Bus 0。若配置地址端口（Configuration Address Port，见图 3‑4）的bit 31被置为1，那么Bridge就会将目标总线号与Bridge之下的从属总线范围进行比较，以此来检查这个目标总线是否从属于当前Bridge之下。
 
-当Bridge收到一个请求，它将会评估目标总线号是否在其下的从属总线号范围内，这个范围大于等于从次级总线号（Sec），小于等于从属总线号（Sub）。若目标总线号与当前的次级总线号相匹配，那么说明当前的次级总线就是目标总线，这个请求就会被作为一个T**ype 0配置请求**来传输。当设备们收到一个Type 0请求，它们就知道当前一级本地总线上的某个设备就是这个请求的目标设备（而不是在更下一级的总线所属的设备）。
+当Bridge收到一个请求，它将会评估目标总线号是否在其下的从属总线号范围内，这个范围大于等于从次级总线号（Sec），小于等于从属总线号（Sub）。若目标总线号与当前的次级总线号相匹配，那么说明当前的次级总线就是目标总线，这个请求就会被作为一个**Type 0配置请求**来传输。当设备们收到一个Type 0请求，它们就知道当前一级本地总线上的某个设备就是这个请求的目标设备（而不是在更下一级的总线所属的设备）。
 
 若目标总线号要大于Bridge的次级总线号（Sec），但是小于或者等于Bridge的从属总线号（Sub），那么这个请求将会作为**Type 1配置请求**被转发到Bridge的次级总线上。对于一个Type 1配置请求，可以这样理解它：尽管这个请求需要经过这条总线，但是它的目标设备并不在这一级总线上，相反地，这个请求将会由当前总线上的Bridge们向下转发到各自的下一级总线上，当然转发该Type 1配置请求的Bridge必须是从属总线范围包含了目标总线的。所有，Type 1配置请求只对Bridge设备有作用。更多关于Type 0和Type 1配置请求的信息，请参阅“Configuration Request”一节。
 
@@ -137,7 +137,7 @@ RC中的Host/PCI Bridge会将写入配置地址端口（Configuration Address Po
 
 ##### 3.7.1.4   多Host系统（Multi-Host System）
 
-若在一个系统中存在多个RC，如图 3‑6所示，那么配置地址端口和配置数据端口将被这两个RC各自的Host/PCI Bridge复用，且两种配置端口各自的IO地址在两个Host/PCI Bridge中相同，也就是两个RC使用相同的一个IO地址来访问各自配置地址寄存器，同理访问配置数据寄存器也是。为了防止争用，在两个Host/PCI Bridge中同时只能有一个响应处理器对配置端口的访问。
+若在一个系统中存在多个RC，如图 3‑6所示，那么配置地址端口和配置数据端口将被这两个RC各自的Host/PCI Bridge复用，且两种配置端口各自的IO地址在两个Host/PCI Bridge中相同，也就是两个RC使用相同的一个IO地址来访问各自配置地址寄存器，同理，访问配置数据寄存器也是。为了防止争用，在两个Host/PCI Bridge中同时只能有一个响应处理器对配置端口的访问。
 
 1. 当处理器发起对配置地址端口的IO写操作时，通过配置两个Host Bridge（ the host bridges are configured, //TODO），仅有一个Host Bridge会参与到此次事务中来。
 
@@ -147,7 +147,7 @@ RC中的Host/PCI Bridge会将写入配置地址端口（Configuration Address Po
    - 若目标总线就是次级总线，那么Bridge将把这个访问转换成Type 0配置访问。
    - 否则，这个访问将被转换成Type 1配置访问。
 
-   译注：上文中的两个 RC 是对应于图 3-6 的情况，更一般的情况中会存在 1-N 个 RC。
+   > 编者注：上文中的两个 RC 是对应于图 3-6 的情况，更一般的情况中会存在 1-N 个 RC。
 
 ![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image124.jpg)
 
@@ -173,7 +173,7 @@ RC中的Host/PCI Bridge会将写入配置地址端口（Configuration Address Po
 
 ### 3.8 配置请求（Configuration Requests）
 
-Bridge为了响应配置请求，将会产生两种类型的配置请求，分别为Type 0和Type 1。具体产生哪一种类型的配置请求则是取决于目标总线号是否与当前Bridge的次级总线号（Secondary Bus Number）相匹配。下面将进行讲解。
+Bridge为了响应配置请求，将会产生两种类型的配置请求，分别为Type 0和Type 1。具体产生哪一种类型的配置请求，取决于目标总线号是否与当前Bridge的次级总线号（Secondary Bus Number）相匹配。下面将进行讲解。
 
 #### 3.8.1     Type 0配置请求（Type 0 Configuration Request）
 
@@ -193,13 +193,13 @@ Bridge为了响应配置请求，将会产生两种类型的配置请求，分�
 
 #### 3.8.2     Type 1配置请求（Type 1 Configuration Request）
 
-当Bridge得到的配置请求的目标总线号并不是自己的次级总线号，但是目标总线号又在从属总线（Subordinate Bus）的范围内，那么Bridge将向次级总线转发一个Type 1请求包。次级总线上的非Bridge的设备（EP）将会忽略Type 1请求，因为这个请求的目标总线并不是当前总线。但是次级总线上的Bridge看到Type 1请求则将会进行与上一级Bridge相同的对比操作，当目标总线在从属总线范围内时：
+当Bridge得到的配置请求的目标总线号并不是自己的次级总线号，但是目标总线号又在从属总线（Subordinate Bus）的范围内，那么Bridge将向次级总线转发一个Type 1请求包。次级总线上的非Bridge的设备（EP）将会忽略Type 1请求，因为这个请求的目标总线并不是当前总线。但是次级总线上的Bridge看到Type 1请求则将会进行与上一级Bridge相同的比对操作，当目标总线在从属总线范围内时：
 
-n 如果目标总线就是当前Bridge的次级总线，这个请求包将从Type 1被转换成Type 0，并转发到次级总线上。次级总线上的本地设备将会像此前描述的一样检查请求包的Header。
+- 如果目标总线就是当前Bridge的次级总线，这个请求包将从Type 1被转换成Type 0，并转发到次级总线上。次级总线上的本地设备将会像此前描述的一样检查请求包的Header。
 
-n 若目标总线号不是当前Bridge的次级总线，但是在从属总线范围内，请求包将会继续以Type 1请求的格式被转发到当前Bridge的次级总线上。
+- 若目标总线号不是当前Bridge的次级总线，但是在从属总线范围内，请求包将会继续以Type 1请求的格式被转发到当前Bridge的次级总线上。
 
-如展示了Type 1配置读请求和写请求的Header格式。在读写两种情况下，Type字段域都是00101，而Format（Fmt）字段则用来指示这是读还是写。
+如图 3-8 展示了Type 1配置读请求和写请求的Header格式。在读写两种情况下，Type字段域都是00101，而Format（Fmt）字段则用来指示这是读还是写。
 
 ![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image130.jpg)
 
@@ -207,25 +207,23 @@ n 若目标总线号不是当前Bridge的次级总线，但是在从属总线范
 
 ### 3.9 PCI兼容配置访问示例（Example PCI-Compatible Configuration Access）
 
-请参阅图 3‑9，在此图中纠正了原书版本的一个错误（该错误为errata中的第1条），Bus 6的中间的Bridge的Sub应该为9而不是8，原图中为8。
+请参阅图 3‑9。
 
-为了更好的对使用传统的CF8h/CFCh机制来产生配置请求进行说明，请参考下面的x86汇编代码，这段代码使得RC执行一个2byte的读操作，操作目标为Bus 4，Device 0，Function 0，Register 0（这个Register 0就是厂商Vendor ID）。
+> 译者：在此图中纠正了原书版本的一个错误（该错误为errata中的第1条），Bus 6的中间的Bridge的Sub应该为9而不是8，原图中为8。
 
- 
+为了更好说明传统的CF8h/CFCh机制来产生配置请求，请参考下面的x86汇编代码，这段代码使得RC执行一个2byte的读操作，操作目标为Bus 4，Device 0，Function 0，Register 0（这个Register 0就是厂商Vendor ID）。
 
-*mov  dx,0CF8h   ;将dx设置为配置地址端口的地址*
+ `mov  dx,0CF8h   ;将dx设置为配置地址端口的地址`
 
-*mov  eax,8004000h ;enable bit=1，bus 4，dev 0，func 0，DW 0*
+`mov  eax,8004000h ;enable bit=1，bus 4，dev 0，func 0，DW 0`
 
-*out  dx,eax    ;IO写来设置地址端口*
+`out  dx,eax    ;IO写来设置地址端口`
 
-*mov  dx,0CFCh   ;将dx设置为配置数据端口的地址*
+`mov  dx,0CFCh   ;将dx设置为配置数据端口的地址`
 
-*in   ax,dx    ;从配置数据端口读出2byte数据*
+`in   ax,dx    ;从配置数据端口读出2byte数据`
 
- 
-
-1. 代码中的out指令将产生一个IO写操作，从处理器写入配置地址端口，这个配置地址端口位于RC的Host Bridge（0CF8h），如图 3‑4。
+ 代码中的out指令将产生一个IO写操作，从处理器写入配置地址端口，这个配置地址端口位于RC的Host Bridge（0CF8h），如图 3‑4。
 
 2. Host Bridge将配置地址端口中的目标总线号（这里是4）与Bridge下方的从属总线范围（这里是0到10）进行比较。很明显目标总线号在从属总线范围内，因此Bridge就准备好了接下来产生配置请求的目的地。
 
@@ -257,23 +255,19 @@ n 若目标总线号不是当前Bridge的次级总线，但是在从属总线范
 
 下面的x86汇编代码将使得RC执行一个2byte的读操作，操作目标为Bus 4，Device 0，Function 0，Register 0（这个Register 0就是厂商Vendor ID）。在这段代码工作之前，Host Bridge必须已经被分配了一个基地址（base address value）。在这个例子中，我们假设增强型配置内存映射范围（Enhanced Configuration memory-mapped range）的256MB对齐基址为E0000000h。
 
- 
+ `mov  ax,[E0400000h] ;内存映射配置的读操作` 
 
-*mov  ax,[E0400000h] ;内存映射配置的读操作*
+- 地址[63:28]表示整体增强型配置地址范围的256MB对齐的基地址的高36bit，在本例中，这个整体增强型配置地址范围为00000000-E0000000h。
 
- 
+- 地址[27:20]用于选择目标bus（本例中为bus 4）
 
-n 地址[63:28]表示整体增强型配置地址范围的256MB对齐的基地址的高36bit，在本例中，这个整体增强型配置地址范围为00000000 E0000000h，地址[63:28]则是表示这个范围中256MB对齐基地址的高36bit。
+- 地址[19:15]用于选择bus上的目标device（本例中为device 0）
 
-n 地址[27:20]用于选择目标bus（本例中为bus 4）
+- 地址[14:12]用于选择device内的目标function（本例中为function 0）
 
-n 地址[19:15]用于选择bus上的目标device（本例中为device 0）
+- 地址[11:2]用于选择function配置空间中的目标DW（本例中为DW 0）
 
-n 地址[14:12]用于选择device内的目标function（本例中为function 0）
-
-n 地址[11:2]用于选择function配置空间中的目标DW（本例中为DW 0）
-
-n 地址[1:0]用于定义选中的DW中的起始byte的位置（本例中为byte 0）
+- 地址[1:0]用于定义选中的DW中的起始byte的位置（本例中为byte 0）
 
  
 
@@ -289,7 +283,7 @@ n 地址[1:0]用于定义选中的DW中的起始byte的位置（本例中为byte
 
 ### 3.11     枚举——搜索发现拓扑（Enumeration-Discovering the Topology）
 
-在完成了系统上电或是复位之后，配置软件需要扫描PCIe网络结构，来搜索发现整个机器的拓扑，并学习这个网络结构是如何被填充的（例如里面都有多少总线、多少设备以及它们的编号等等）。在这进行之前，如图 3‑10所示，软件唯一知道的就是拓扑中有一个Host/PCI Bridge以及这个Bridge的次级总线Bus 0。需要注意，一个Bridge自身上方相连的总线称为主总线（Primary Bus），而这个Bridge自身下方相连的总线称为次级总线（Secondary Bus）。扫描PCIe结构来发现整体拓扑结构的过程被称为枚举过程。
+在完成了系统上电或是复位之后，配置软件需要扫描PCIe网络结构，来搜索发现整个机器的拓扑，并学习这个网络结构是如何被填充的（例如里面都有多少总线、多少设备以及它们的编号等等）。在这进行之前，如图 3‑10所示，软件唯一知道的就是拓扑中有一个Host/PCI Bridge以及这个Bridge的次级总线Bus 0。需要注意，一个Bridge自身上方相连的总线称为主总线（Primary Bus），而这个Bridge自身下方相连的总线称为次级总线（Secondary Bus）。扫描PCIe结构来发现整体拓扑结构的过程被称为**枚举过程**。
 
 ![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image134.jpg)
 
@@ -305,35 +299,37 @@ n 地址[1:0]用于定义选中的DW中的起始byte的位置（本例中为byte
 
 对于PCIe来说，针对一个不存在的设备的配置读请求将使得目标设备上方连接的Bridge返回一个不携带数据的完成包，这个完成包的状态字段将被置为UR（Unsupported Request，不被支持的请求）。为了向后兼容传统的枚举模型，若RC在枚举过程中收到这样的完成包，它将会给处理器返回数据FFFFh。注意，枚举软件是依赖于接收到一个返回值为全1（FFFFh）的配置读请求来判定目标设备是不存在的，而系统中的在读取这样一个不存在的设备Function的Vendor ID时，其实是返回了一个状态为Unsupported Request的不携带数据的完成包。
 
-当出现设备不存在的情况时，也需要避免意外地发送错误报告，这很重要。尽管这种超时或者UR的结果在系统正常运行是确实是出错的情况，但是在枚举过程中它并不能被认为是错误，它是一种正常的可以预料到的结果。为了能更简单的避免这种混乱，设备们一般在这过程中都不启用错误信号，直到枚举完成才启用。对于PCIe来说，记录这种事件（目标设备不存在）仍然是有作用的，这也就是为什么PCIe能力寄存器块（PCIe Capability register block）中存在第4个“错误”状态位，被称为Unsupported Request Status不受支持的请求状态（更多关于这部分的内容请见“Enabling/Disabling Error Reporting”一节）。由于有这个状态位的存在，发生目标设备不存在的情况就可以被记录下来，而且不会被当做是一个错误，这一点非常重要，因为若检测到一个错误那么枚举过程将被停止并调用系统错误处理程序。在枚举还没进行完的这个时间段，错误处理软件的能力可能十分有限，使得问题无法被解决。这将造成枚举软件运行失败，因为通常是在操作系统（OS）或者其他错误处理软件可用之前就已经执行枚举软件。为了避免这种风险，在枚举期间，通常不应该报告错误。
+当出现设备不存在的情况时，也需要避免意外地发送错误报告，这很重要。尽管这种超时或者UR的结果在系统正常运行是确实是出错的情况，但是在枚举过程中它并不能被认为是错误，它是一种正常的可以预料到的结果。为了能更简单的避免这种混乱，设备们一般在这过程中都不启用错误信号，直到枚举完成才启用。对于PCIe来说，记录这种事件（目标设备不存在）仍然是有作用的，这也就是为什么PCIe能力寄存器块（PCIe Capability register block）中存在第4个“错误”状态位，被称为Unsupported Request Status，不受支持的请求状态（更多关于这部分的内容请见“Enabling/Disabling Error Reporting”一节）。由于有这个状态位的存在，发生目标设备不存在的情况就可以被记录下来，而且不会被当做是一个错误，这一点非常重要，因为若检测到一个错误那么枚举过程将被停止并调用系统错误处理程序。在枚举还没进行完的这个时间段，错误处理软件的能力可能十分有限，使得问题无法被解决。这将造成枚举软件运行失败，因为通常是在操作系统（OS）或者其他错误处理软件可用之前就已经执行枚举软件。为了避免这种风险，在枚举期间，通常不应该报告错误。
 
 ##### 3.11.1.2 设备未准备好（Device not Ready）
 
 前面提到的可能会发生的另一个问题就是目标设备虽然存在，但是可能并未准备好响应配置访问。对于配置操作来说，需要考虑发起配置的时间点，因为设备准备好被访问是需要时间的。如果数据速率小于等于5.0GT/s，软件必须在复位后等待100ms再发起配置请求。如果数据速率高于5.0GT/s（Gen3速率），软件必须在链路训练（Link Training）完成100ms之后再尝试发起配置操作。之所以更高的速率需要更多的延时（Gen3需要在链路训练完成后等待100ms而不是复位完成等待100ms），这是因为Gen3的链路训练中的均衡过程（Equalization Process）可能需要比较长的时间（约50ms，关于这里的更多内容请参阅“Link Equalization Overview”一节）。
 
-在PCI 2.3中定义了初始化时间（Initialization Time，Trhfa-从复位被置为高释放到第一个访问所经历的时间），初始化时间起始于RST#被置为无效，结束于225个PCI时钟周期之后。这相当于整整一秒钟，在这一秒内，Function正在为响应它的第一次配置访问做准备，并且这个时间值也被PCIe所使用，在PCIe中为1.0s（+50%/-0%）。一个Function可以利用这段时间来填充自己的配置寄存器，例如这一过程可以通过加载一个外挂的串行EEPROM的内容来实现。加载EEPROM内容需要花费一点时间，在这段时间内Function都没有准备好响应配置请求，直到加载完成。在PCI中，若在Function准备好之前就收到了一个配置访问，那么它有三个选择：忽略这个请求、重试（Retry）这个请求、接收这个请求但是延期响应直到Function自身完全准备好为止。最后一种选择的响应可能会给热插拔（Hot-plug）系统带来麻烦，因为延期响应的时长可能会达到1s，在这1s中总线都是停止的，直到这个请求被执行完，总线才重新活动起来。
+在PCI 2.3中定义了初始化时间（Initialization Time，Trhfa-从复位释放到第一个访问所经历的时间），初始化时间起始于RST#被置为无效，结束于225个PCI时钟周期之后。在这段长度为一秒的时间内，Function正在为响应第一次配置访问做准备，这个时间长度也被PCIe协议所使用，协议规定初始化时间为1.0s（+50%/-0%）。一个Function可以利用这段时间来填充自己的配置寄存器，例如加载一个外挂的串行EEPROM的内容做为寄存器初始值。加载EEPROM内容需要花费一点时间，加载完成前Function都没有准备好响应配置请求。
 
-在PCIe中我们也面临着相同的问题，但是问题的过程有一点不同。首先，PCIe Function在临时无法响应配置访问时必须要给出一个完成包，这个完成包也要被置为指定的状态，这个状态为Configuration Request Retry Status（CRS，配置请求重试状态）。这个状态只有在响应配置请求的时候才是合法的，如果其他的请求收到了这个状态的完成包，则可能会认为数据包格式错误（Malformed Packet error）。这种状态的响应也只在复位后的1秒后有效，因为在1秒之后Function就被认为是可以正常响应配置请求了，如果1秒之后这个Function都还无法正常响应配置请求那么就认为它已经损坏了。
+在PCI中，若在Function准备好之前就收到了一个配置访问，那么它有三个选择：忽略这个请求、重试（Retry）这个请求、接收这个请求但是延期响应直到Function自身完全准备好为止。最后一种选择的响应可能会给热插拔（Hot-plug）系统带来麻烦，因为延期响应的时长可能会达到1s，在这1s中总线都是停止的，直到这个请求被执行完，总线才重新工作。
 
-除了系统复位之后的那一段时间之外，RC处理配置读请求的CRS（配置重试状态）完成包的方式是特定实现的而不是通用的。而在系统复位后的那一小段时间里，RC有两个可以进行的操作供选择，选择哪一种则取决于Root控制寄存器（Root Control Register）中CRS Software Visibility这一bit的值（如图 3‑11）。
+在PCIe中我们也面临着相同的问题，但是问题的过程有一点不同。首先，PCIe Function在临时无法响应配置访问时必须要给出一个完成包，这个完成包也要被置为指定的状态，这个状态为Configuration Request Retry Status（CRS，配置请求重试状态）。这个状态只有在响应配置请求的时候才是合法的，如果其他的请求收到了这个状态的完成包，则可能会认为数据包格式错误（Malformed Packet error）。这种状态的响应也只在复位后的1秒后有效，因为在1秒之后Function就被认为是可以正常响应配置请求了，如果1秒之后这个Function都还无法正常响应配置请求，那么就认为它已经损坏了。
+
+除了系统复位之后的那一段时间之外，RC处理配置读请求的CRS（配置重试状态）完成包的方式不是通用的。在系统复位后的那一小段时间里，RC有两个可以进行的操作供选择，选择哪一种则取决于Root控制寄存器（Root Control Register）中CRS Software Visibility这一bit的值（如图 3‑11）。
 
 ![img](img/3%20PCIe%20%E9%85%8D%E7%BD%AE%E6%A6%82%E8%BF%B0/clip_image136.jpg)
 
 图 3‑11 PCIe能力块中的Root控制寄存器
 
-n 如果这个bit被置为1，而且发出的请求是配置读请求，要读取Vendor ID寄存器的全部两个byte（枚举过程通过这样的操作来搜索发现一个Function是否存在），那么在接收到CRS完成包时RC需要给Host返回伪造的0001h作为读取的寄存器值，并将其他的所有字节都置为全1。这个Vendor ID并没有被任何真实的设备所使用，软件将把这个0001h的Vendor ID理解为访问这个设备可能需要很长的延迟。这个信息很有用，因为软件就可以选择去执行其他的任务，更充分的利用这段等待设备响应的时间，稍后再返回来查询这个设备。要进行这样子的操作，软件必须确保其在复位后对Function的第一次访问就是读取2 byteVendor ID的配置读访问。
+- 如果这个bit被置为1，而且发出的请求是配置读请求，要读取Vendor ID寄存器的全部两个byte（枚举过程通过这样的操作来搜索发现一个Function是否存在），那么在接收到CRS完成包时RC需要给Host返回伪造的0001h作为读取的寄存器值，并将其他的所有字节都置为全1。这个Vendor ID并没有被任何真实的设备所使用，软件将把这个0001h的Vendor ID理解为访问这个设备可能需要很长的延迟。这个信息很有用，因为软件就可以选择去执行其他的任务，更充分的利用这段等待设备响应的时间，稍后再返回来查询这个设备。要进行这样子的操作，软件必须确保其在复位后对Function的第一次访问就是读取2 byteVendor ID的配置读访问。
 
-n 对于配置写访问或者是其他的配置读访问（并不是读2byte Vendor ID），RC必须自动地以一个新请求的形式对之前的配置请求进行重新下达。
+- 对于配置写访问或者是其他的配置读访问（并不是读2byte Vendor ID），RC必须自动地以一个新请求的形式对之前的配置请求进行重新下达。
 
 #### 3.11.2    确认某个Function是EP还是Bridge
 
 枚举过程的一个关键部分就是可以确定一个Function是Bridge还是EP。如图 3‑12所示，Header类型寄存器（Header Type Register，位于配置空间Header的偏移地址0Eh）的低7bit用于标识这个Function的基本种类，总共定义了三种不同的值：
 
-n 0 = 不是一个Bridge（那也就是一个PCIe EP）
+- 0 = 不是一个Bridge（那也就是一个PCIe EP）
 
-n 1 = PCI-to-PCI Bridge（缩写为P2P），用于连接两条总线
+- 1 = PCI-to-PCI Bridge（缩写为P2P），用于连接两条总线
 
-n 2 = 插件卡Bridge（CardBus Bridge，现在很少使用的遗留接口）
+- 2 = 插件卡Bridge（CardBus Bridge，现在很少使用的历史遗留接口）
 
 在图 3‑1中，每个虚拟P2P的Header Type字段（DW3，byte2）的返回值都为1，且PCI Express-to-PCI Bridge（Bus 8，Device 0）的Header Type字段也将返回1。但是对于EP来说，它返回的Header Type字段是0。
 
@@ -349,15 +345,15 @@ n 2 = 插件卡Bridge（CardBus Bridge，现在很少使用的遗留接口）
 
 2. 从Device 0开始，枚举软件将会尝试去读取Bus 0上的32个可能存在的Device，读取的内容为它们各自的Function中的Vendor ID。如果Bus 0—Device 0—Function 0返回了一个有效的Vendor ID，那么就认为这个设备存在并至少含有一个Function。若Bus 0—Device 0—Function 0没有返回一个有效的Vendor ID，则继续去探测Bus 0—Device 1—Function 0。
 
-3. 在本例中的值为1的Header Type字段（如图 3‑12）表示这是一个PCI-to-PCI Bridge。Header Type寄存器中的Multifunction位（bit 7）为0，这表示Function 0就是这个Bridge中唯一的Function。协议规范其实并没有阻止在Bridge这样的设备中去实现多个Function，相反地，当有多个Function时每个Function都可以作为又一个虚拟PCI-to-PCI Bridge，甚至还可以是一个非Bridge的Function。
+3. 在本例中的值为1的Header Type字段（如图 3‑12）表示这是一个PCI-to-PCI Bridge。Header Type寄存器中的Multifunction位（bit 7）为0，这表示Function 0就是这个Bridge中唯一的Function。协议规范其实并没有阻止在Bridge这样的设备中去实现多个Function，相反地，当有多个Function时，每个Function都可以作为一个虚拟PCI-to-PCI Bridge，甚至还可以是一个非Bridge的Function。
 
 4. 现在软件已经找到了一个Bridge，并执行了一系列配置写操作来将这个Bridge的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=0
+- 主总线号寄存器（Primary Bus Number Register）=0
 
-n 次级总线号（Secondary Bus Number）=1
+- 次级总线号（Secondary Bus Number）=1
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 现在，这个Bridge就认为在它下方直接相连的总线的编号为1（次级总线号=1），它下方从属的最大总线号是255（从属总线号=255）。
 
@@ -369,11 +365,11 @@ n 从属总线号（Subordinate Bus Number）=255
 
 8. 软件现在执行一系列的配置写操作来将这个Bridge C的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=1
+- 主总线号寄存器（Primary Bus Number Register）=1
 
-n 次级总线号（Secondary Bus Number）=2
+- 次级总线号（Secondary Bus Number）=2
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 9. 软件继续进行深度优先的搜索（depth-first search），读取Bus 2—Device 0—Function 0的Vendor ID。在本例中（图 3‑13），Bus 2上的Device 0—Function 0是Bridge D。
 
@@ -383,11 +379,11 @@ n 从属总线号（Subordinate Bus Number）=255
 
 12. 软件现在执行一系列的配置写操作来将这个Bridge D的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=2
+- 主总线号寄存器（Primary Bus Number Register）=2
 
-n 次级总线号（Secondary Bus Number）=3
+- 次级总线号（Secondary Bus Number）=3
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 13. 继续进行深度优先的搜索（depth-first search），读取Bus 3—Device 0—Function 0的Vendor ID。在本例中（图 3‑13），Bus 2上的Device 0—Function 0是Bridge D。
 
@@ -407,11 +403,11 @@ n 从属总线号（Subordinate Bus Number）=255
 
 21. 软件现在执行一系列的配置写操作来将这个Bridge E的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=2
+- 主总线号寄存器（Primary Bus Number Register）=2
 
-n 次级总线号（Secondary Bus Number）=4
+- 次级总线号（Secondary Bus Number）=4
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 22. 软件继续进行深度优先的搜索（depth-first search），读取Bus 4—Device 0—Function 0的Vendor ID。
 
@@ -429,55 +425,55 @@ n 从属总线号（Subordinate Bus Number）=255
 
 29. 如前面所述的相同的过程，枚举软件发现Bridge B，并执行一系列的配置写操作来将这个Bridge B的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=0
+- 主总线号寄存器（Primary Bus Number Register）=0
 
-n 次级总线号（Secondary Bus Number）=5
+- 次级总线号（Secondary Bus Number）=5
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 30. 然后枚举软件又在Bus 5上发现Bridge F，并执行一系列的配置写操作来将这个Bridge F的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=5
+- 主总线号寄存器（Primary Bus Number Register）=5
 
-n 次级总线号（Secondary Bus Number）=6
+- 次级总线号（Secondary Bus Number）=6
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 31. 接着枚举软件又在Bus 6上发现Bridge G，并执行一系列的配置写操作来将这个Bridge G的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=6
+- 主总线号寄存器（Primary Bus Number Register）=6
 
-n 次级总线号（Secondary Bus Number）=7
+- 次级总线号（Secondary Bus Number）=7
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 32. 当枚举软件继续在Bus 7上搜索，它发现了一个单Function的EP设备，Bus 7—Device 0—Function 0，因此将Bridge G的从属总线号更新为7。
 
 33. 枚举软件向上回到Bus 6继续进行搜索，然后它发现了Bridge H，并执行一系列的配置写操作来将这个Bridge H的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=6
+- 主总线号寄存器（Primary Bus Number Register）=6
 
-n 次级总线号（Secondary Bus Number）=8
+- 次级总线号（Secondary Bus Number）=8
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 34. 然后枚举软件又在Bus 8上发现Bridge J，并执行一系列的配置写操作来将这个Bridge J的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=8
+- 主总线号寄存器（Primary Bus Number Register）=8
 
-n 次级总线号（Secondary Bus Number）=9
+- 次级总线号（Secondary Bus Number）=9
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 35. Bus 9上的所有设备以及与它们相关的Function都已经全部被搜索完成，它们都不是Bridge，因此下方也就没有附加的总线，所以将Bridge H和Bridge J的从属总线号更新为9。
 
 36. 枚举软件向上回到Bus 6继续进行搜索，然后它发现了Bridge I，并执行一系列的配置写操作来将这个Bridge I的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=6
+- 主总线号寄存器（Primary Bus Number Register）=6
 
-n 次级总线号（Secondary Bus Number）=10
+- 次级总线号（Secondary Bus Number）=10
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
 37. 当枚举软件继续在Bus 10上搜索，它发现了一个单Function的EP设备，Bus 10—Device 0—Function 0。
 
@@ -497,13 +493,13 @@ n 从属总线号（Subordinate Bus Number）=255
 
 考虑如图 3‑14所示的多RC系统。在这个系统中，每个RC：
 
-n 实现了各自的配置地址端口（Configuration Address Port）和配置数据端口（Configuration Data Port），并且各个RC中的这些相应的端口的IO地址是相同的，比如RC 0和RC 1的配置地址端口的IO地址相同。
+- 实现了各自的配置地址端口（Configuration Address Port）和配置数据端口（Configuration Data Port），并且各个RC中的这些相应的端口的IO地址是相同的，比如RC 0和RC 1的配置地址端口的IO地址相同。
 
-n 都实现了增强型配置机制。
+- 都实现了增强型配置机制。
 
-n 都包含一个Host/PCI Bridge
+- 都包含一个Host/PCI Bridge
 
-n 实现了各自的次级总线号寄存器和从属总线号寄存器，但是不同RC的这两个寄存器对于配置软件来说是不同的操作地址。
+- 实现了各自的次级总线号寄存器和从属总线号寄存器，但是不同RC的这两个寄存器对于配置软件来说是不同的操作地址。
 
 在图示中，每个RC都是一个芯片组成员，这其中的一个RC被设计为主RC，它的Bridge下方相连的总线为Bus 0，它被称为主RC（Primary Root Complex）。而另一个RC的Bridge下方相连的总线则是被暂时认为是Bus 255，它被称为次级RC（Secondary Root Complex）。
 
@@ -517,13 +513,15 @@ n 实现了各自的次级总线号寄存器和从属总线号寄存器，但是
 
 3. 然后枚举软件执行一系列的配置写操作来将这个Bridge的总线号寄存器设置为如下值：
 
-n 主总线号寄存器（Primary Bus Number Register）=64
+- 主总线号寄存器（Primary Bus Number Register）=64
 
-n 次级总线号（Secondary Bus Number）=65
+- 次级总线号（Secondary Bus Number）=65
 
-n 从属总线号（Subordinate Bus Number）=255
+- 从属总线号（Subordinate Bus Number）=255
 
-现在，这个Bridge就认为在它下方与它直接相连的总线编号为65（次级总线号=65），并且它下方最大的总线号为255（从属总线号=255）。（这里原书有误，原书写其下方的最大总线号为65，但是应该是255，只不过之后这个号会被更新为65）
+现在，这个Bridge就认为在它下方与它直接相连的总线编号为65（次级总线号=65），并且它下方最大的总线号为255（从属总线号=255）。
+
+> 译注：这里原书有误，原书写其下方的最大总线号为65，但是应该是255，只不过之后这个号会被更新为65
 
 4. 枚举软件继续在Bus65上进行搜索，并发现了Device 0，且它仅有一个Function 0。进一步搜索的结果显示，在Bus 65上并没有其他的Device了，因此搜索过程返回到上一级总线。
 
@@ -539,7 +537,7 @@ n 从属总线号（Subordinate Bus Number）=255
 
 热插拔，指的是一个插件卡（add-in card）可以在系统运行时插入或拔出。在这种热插拔环境中，对于图 3‑14中的Bus 8来说，可能带来潜在的麻烦。若系统已经完成枚举，并已经正常的开始运行了，这时将一个含有Bridge的插件卡插到Bus 8上，则有可能会引发问题。这个插件卡内的Bridge分配给自己的次级总线号和从属总线号将会比自己的主总线上的其他从属总线的编号还要大，并且将完全包含这些总线号，意思就是说，Bus 8下方若出现了新总线，那么这个新总线可能要被分配为Bus 9，而这就与已经存在的Bus 9产生了冲突。这是因为新的总线号必须在插件卡上方的Bridge的从属总线范围内，对于本例（图 3‑14）来说也就是在6-9的范围内。
 
-一种用来分配Bus 8下方这些新增的总线号的方法是，将当前的Bus 9的编号增大，为Bus 8下的新增总线号腾出编号的空间。尽管在系统运行时调整总线号是可以做到的，但是据有经验的人说，这样的方法很难工作的很好。
+一种用来分配Bus 8下方这些新增的总线号的方法是，将当前的Bus 9的编号增大，为Bus 8下的新增总线号腾出编号的空间。尽管在系统运行时调整总线号是可以做到的，但是据有经验的人说，使用这种方法的效果不是很好。
 
 还有一种简单的方法来解决这个潜在的问题：只需要在发现未填充的插件卡插槽时，简单地留出一段总线编号间隔（bus number gap）即可。例如，当Bus 8被分配了总线号8，但是在它下方发现了一个空的插件卡插槽，那么就给下一个被发现的总线一个更高的总线号，比如给它编号19而不是9，这样就为Bus 8之下以后可能的新增总线留出了编号空间。然后，如果一个带有Bridge的插件卡被插入，那么新增的总线就可以从Bus 9开始编号，而不会产生任何问题。在大多数情况下，留出这样的总线编号间隔并不会引发问题，因为系统总共可以分配256个总线号，编号资源较为充足。
 
@@ -561,43 +559,56 @@ MindShare Arbor是一个很棒的参考学习工具，可以用它来代替书�
 
 #### 3.14.2    MindShare Arbor功能列表
 
-n 包含PCIe 3.0协议中的所有配置寄存器的描述内容。
+- 包含PCIe 3.0协议中的所有配置寄存器的描述内容。
+- 可以扫描一个系统中所有PCI可见Function的配置空间，并以可读性极强的格式将每个寄存器的讲解都展示出来。
+- 可以直接访问任何的memory或者IO地址。
+- 可以写入任意的配置空间位置、memory地址或是IO地址。
+- 可以在一个已经解码的格式中查看标准或非标准的结构体
+  - 解码信息可以给标准的PCI、PCI-X、PCI Express结构体进行解码。
 
-n 可以扫描一个系统中所有PCI可见Function的配置空间，并以可读性极强的格式将每个寄存器的讲解都展示出来。
+  - 解码信息可以给一些基于x86的结构体和设备特别的寄存器进行解码。
 
-n 可以直接访问任何的memory或者IO地址。
+- 可以创建自己定义的基于XML的译码文件，来驱动Arbor的信息显示。
 
-n 可以写入任意的配置空间位置、memory地址或是IO地址。
+  - 可以创建译码文件，来对配置空间、内存地址空间和IO空间内的结构体进行译码。
 
-n 可以在一个已经解码的格式中查看标准或非标准的结构体
+- 可以保存系统扫描的结果，并之后再在其他系统上查看这个结果。
 
-o 解码信息可以给标准的PCI、PCI-X、PCI Express结构体进行解码。
+  - 保存的系统扫描结果是基于XML的开源格式的文件。
 
-o 解码信息可以给一些基于x86的结构体和设备特别的寄存器进行解码。
+- 已经拥有或者即将拥有的新功能特性
 
-n 可以创建自己定义的基于XML的译码文件，来驱动Arbor的信息显示。
+  - 可以检查几次扫描结果之间的差异。
 
-o 可以创建译码文件，来对配置空间、内存地址空间和IO空间内的结构体进行译码。
+  - 可以为扫描中的违规或者非最佳的设置进行后期处理。
 
-n 可以保存系统扫描的结果，并之后再在其他系统上查看这个结果。
+  - 可以支持脚本来达到自动化。
 
-o 保存的系统扫描结果是基于XML的开源格式的文件。
+  - 可以对x86结构体进行译码（MSRs、paging、segmentation、interrupt tables等等）。
 
-n 已经拥有或者即将拥有的新功能特性
+  - 可以对ACPI结构体进行译码。
 
-o 可以检查几次扫描结果之间的差异。
+  - 可以对USB结构体进行译码。
 
-o 可以为扫描中的违规或者非最佳的设置进行后期处理。
+  - 可以对NVM Express结构体进行译码。
 
-o 可以支持脚本来达到自动化。
-
-o 可以对x86结构体进行译码（MSRs、paging、segmentation、interrupt tables等等）。
-
-o 可以对ACPI结构体进行译码。
-
-o 可以对USB结构体进行译码。
-
-o 可以对NVM Express结构体进行译码。
+### 术语翻译
+|英文|翻译|
+|--|--|
+|PCI-Compatible configuration space|PCI兼容配置空间|
+|PCIe extended configuration space|PCIe扩展配置空间|
+|Base Address Register|基址寄存器|
+|bus|总线|
+|device|设备|
+|function|功能|
+|capability structures|能力结构|
+|Enhanced configuration mechanism|增强配置机制|
+|IO-indirect access|IO间接访问|
+|memory-mapped access|内存映射访问|
+|Primary Bus Number|主总线号|
+|Secondary Bus Number|次级总线号|
+|Subordinate Bus Number|从属总线号|
+|Enumeration|枚举|
 
 ------
 
