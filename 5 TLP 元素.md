@@ -14,33 +14,35 @@
 
 下一章将讨论流量控制协议（Flow Control Protocol）的目的和详细操作。流量控制是用来确保发送方在接收方无法接收TLP时，不会再继续发送TLP。这避免了接收缓存的溢出，也消除了原本PCI工作方式中的一些低效行为，比如断开（disconnect）、重试（retry）和等待态（wait-state）。
 
-### 5.1 基于包的协议的介绍（Introduction to Packet-Based Protocol）
+### 5.1 基于数据包协议的介绍（Introduction to Packet-Based Protocol）
 
-#### 5.1.1     整体说明（General）
+#### 5.1.1     概括（General）
 
 不同于并行总线，PCIe这样的串行总线不使用总线上的控制信号来表示某时刻链路上正在发生什么。相反地，PCIe链路上的发送方发出的比特流必须要有一个预期的大小，还要有一个可供接收方辨认的格式，这样接收方才能理解比特流的内容。此外，PCIe在传输数据包时并不使用任何直接握手机制（immediate handshake）。
 
-除了逻辑空闲符号（Logical Idle symbol）和物理层包也就是Ordered Set之外，在活跃的PCIe链路上移动传输的信息的基本组块被称为Packet（包），包是由符号组成的。链路上交换的两类主要的数据包为高层的TLP（Transaction Layer Packet，事务层包），和低层的用于链路维护的包称为DLLP（Data Link Layer Packet，数据链路层包）。这些包和它们的传输流如图 5‑1所示。物理层的Ordered Set也是一种包，但是它并不像TLP和DLLP一样会被封装上包起始符号和包结束符号（也就是前面章节所讲的组帧符号），并且Ordered Set也并没有像TLP和DLLP一样的字节条带化过程，相反地，Ordered Set会在链路的每个通道（lane）上都复制一份，而不是像字节条带化一样把信息按字节分配到各个通道上。
+除了逻辑空闲符号（Logical Idle symbol）和Ordered Set的物理层包外，在活跃的PCIe链路上移动传输的信息的基本组块被称为Packet（包），包是由符号组成的。链路上交换的两类主要的数据包为高层的TLP（Transaction Layer Packet，事务层包），和低层的用于链路维护的包称为DLLP（Data Link Layer Packet，数据链路层包）。这些包和它们的传输流如图 5‑1所示。物理层的Ordered Set也是一种包，但是它并不像TLP和DLLP一样会被封装上包起始符号和包结束符号（也就是前面章节所讲的组帧符号），并且Ordered Set也并没有像TLP和DLLP一样的字节条带化过程，相反地，Ordered Set会在链路的每个通道（lane）上都复制一份，而不是像字节条带化一样把信息按字节分配到各个通道上。
 
 ![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image210.jpg)
 
 图 5‑1 TLP和DLLP包
 
-#### 5.1.2     使用基于包的协议的原因
+#### 5.1.2     使用基于数据包协议的原因
 
 使用基于包的协议（Packet-Based Protocol）有三个明显的优点，特别是对于数据完整性（data integrity）来说：
 
-##### 5.1.2.1   包格式是精心定义的
+##### 5.1.2.1   使用精心定义的数据包格式
 
 
 
-像PCI这种早期的总线，它们允许总线上传输不确定的数据量大小，这使得只要传输没有结束就无法识别出数据荷载（payload）的边界。此外，任何一个设备都可以在此次传输完成前终止这个传输，这使得发送方很难去计算并传输一个覆盖了整个数据荷载的校验和或者CRC。相反地，PCI使用了一种简单的奇偶校验的方案，并在每个数据阶段（data phase）进行奇偶校验。（这里如果没理解请参阅Chapter 1内的PCI相关内容）
+像PCI这种早期的总线，它们允许总线上不确定数据量大小的传输，这使得只要传输没有结束就无法识别出数据荷载（payload）的边界。此外，任何一个设备都可以在此次传输完成前终止这个传输，这使得发送方很难去计算并传输一个覆盖了整个数据荷载的校验和或者CRC。相反地，PCI使用了一种简单的奇偶校验的方案，并在每个数据阶段（data phase）进行奇偶校验。（这里如果没理解请参阅Chapter 1内的PCI相关内容）
 
 相比之下，PCIe包具有一个已知的大小和格式。位于包的开头的部分为Header，它用来指示这个包的类型，并包含了必需字段（required field）和可选字段（optional field）。除了地址字段以外，Header中的其他字段长度都是固定的，地址字段可以为32bit也可以为64bit。一旦一次传输开始，接收方不能暂停或者提前终止它。这种结构化的格式使得我们可以在TLP中加入一些信息来更有利于进行可靠的传输，例如加入组帧符号（framing symbol）、CRC、以及一个包的序列号（Sequence Number）。
 
 ##### 5.1.2.2   使用组帧符号定义包的边界
 
-在PCIe Gen1和Gen2操作模式中使用的是8b/10b编码，因此在这Gen1和Gen2中每个TLP和DLLP在发送前都会使用起始符号（Start）和结束符号（End）这两种控制符号来进行组帧，这样就可以给接收方清晰地定义出包的边界。这是在PCI和PCI-X上的重大改进，在PCI和PCI-X中还是使用一个单独的FRAME#信号来指示一个事务的开始和结束，如果FRAME#出现了毛刺，或者其他的控制信号出现了毛刺，那么都有可能造成目标设备对总线行为的误解。一个PCIe接收方必须要能在最后的链路活动开始或结束之前，就正确的完成一个完整10bit符号的译码，这样子那些不期望出现或者无法识别的符号就能更容易的被识别，并且被作为一个错误来处理。
+在PCIe Gen1和Gen2操作模式中使用的是8b/10b编码，因此在这Gen1和Gen2中每个TLP和DLLP在发送前都会使用起始符号（Start）和结束符号（End）这两种控制符号来进行组帧，这样就可以给接收方清晰地定义出包的边界。这是在PCI和PCI-X上的重大改进，在PCI和PCI-X
+
+### 标题中还是使用一个单独的FRAME#信号来指示一个事务的开始和结束，如果FRAME#出现了毛刺，或者其他的控制信号出现了毛刺，那么都有可能造成目标设备对总线行为的误解。一个PCIe接收方必须要能在最后的链路活动开始或结束之前，就正确的完成一个完整10bit符号的译码，这样子那些不期望出现或者无法识别的符号就能更容易的被识别，并且被作为一个错误来处理。
 
 对于PCIe Gen3使用的128b/130b编码来说，控制字符不再被使用，并且也没有组帧符号了。对于更多的关于Gen3编码与早期版本的差异的内容，请参阅Chapter 12“Physical Layer-Logical（Gen3）”。
 
@@ -68,15 +70,15 @@ n 发送方
 
 —  源端信息，例如Requester ID和Tag
 
-—  事务类型/包类型（需要执行的命令，例如一个MRd）
+—  事务类型/数据包类型（需要执行的命令，例如一个内存读取MRd）
 
 —  数据荷载大小payload size和数据荷载内容（如果TLP需要带数据）
 
-—  流量类型（Traffic Class，用于分配包的优先级）
+—  流量类型（Traffic Class，用于分配数据包的优先级）
 
 —  请求的自身属性（No Snoop无窥探、Relaxed Ordering宽松排序，等等）
 
-\2.    基于这个请求，事务层将会组建TLP Header，并在其后附上数据荷载（如果有），如果需要启用并支持可选项的话也可以再附上ECRC（End-to-End CRC）。随后TLP就会被放入一个虚拟通道Buffer。这个虚拟通道会根据事务排序规则来管理TLP的顺序，并且也要在TLP被向下转发到数据链路层之前，确认接收方有足够的Buffer来接收一个TLP。
+\2.    基于这个请求，事务层将会组建TLP Header，并在其后附上数据荷载（如果有），以及如果启用并支持可选项的话也可以再附上ECRC（End-to-End CRC）。随后TLP就会被放入一个虚拟通道Buffer。这个虚拟通道会根据事务排序规则来管理TLP的顺序，并且也要在TLP被向下转发到数据链路层之前，确认接收方有足够的Buffer来接收一个TLP。
 
 \3.    当TLP到达数据链路层，它会被分配一个序列号（Sequence Number），并基于TLP的内容和序列号来计算出一个LCRC（Link CRC）来附加在原TLP后。然后会将经过这些处理过程之后的TLP保存一个副本，这个副本会保存在数据链路层的重传Buffer（Replay Buffer，也可称为Retry Buffer）中，这是为了应对传输出错的情况。与此同时，这个TLP也会被向下转发至物理层。
 
@@ -90,11 +92,11 @@ n 接收方
 
 \6.    数据链路层将会计算CRC（具体一点是LCRC）并与TLP中的CRC进行比较。如果CRC比较结果相同，那么就再检查序列号（Sequence Number）。如果都没有出现错误，那就把CRC和序列号都从TLP剥除，并随后将TLP向上转发给接收方事务层，与此同时要通过返回给发送方一个Ack DLLP来通知发送方这个TLP被成功接收。相反地，如果前面的过程中检查出了错误，那么就要返回给发送方一个Nak DLLP，这样发送方将会使用它的重传Buffer来对TLP进行重传。
 
-\7.    在事务层，TLP被进行译码，并将TLP内的信息传递给Device Core来进行相应的操作。如果当前接收设备就是数据包的最终目的地，那么它可以检查ECRC错误，并在发现任何ECRC错误时报告给Device Core。
+\7.    在事务层，TLP被进行解码，并将TLP内的信息传递给Device Core来进行相应的操作。如果当前接收设备就是数据包的最终目的地，那么它可以检查ECRC错误，并在发现任何ECRC错误时报告给Device Core。
 
 #### 5.2.2     TLP结构
 
-一个事务层包TLP中各个字段域的基本用法在表 5‑1中进行了定义。
+一个事务层包TLP中每个字段域的基本用法在表 5‑1中进行了定义。
 
 ![img](img/5%20TLP%20%E5%85%83%E7%B4%A0/clip_image214.jpg)
 
@@ -122,7 +124,7 @@ n Data
 
 n 协议层次：事务层
 
-n 该组件用法：可选的1-1024DW大小的数据荷载，具体的大小由字节使能或者字节对齐的开始和结束地址来进行描述。需要注意指定的长度不能为0，但是一个0长度的读取（在某些情况下会使用）可以通过指定长度为1DW然后将字节使能全部置为0来进行近似处理。来自Completer的这样子的数据虽然是未定义的种类，但是Requester并不使用它，因此就和指定0长度的目的等效了。
+n 该组件用法：可选的1-1024DW大小的数据荷载，具体的大小由字节使能或者字节对齐的开始和结束地址来进行描述。需要注意指定的长度不能为0，但是一个0长度的读取可以通过指定长度为1DW然后将字节使能全部置为0来进行近似处理（在某些情况下会使用）。来自Completer的结果数据虽然是未定义的种类，但是Requester并不使用它，因此就和指定0长度的目的等效了。
 
 n Digest/ECRC
 
@@ -132,7 +134,7 @@ n 该组件用法：可选的功能。当需要使用时，ECRC的大小永远�
 
 #### 5.2.3     通用TLP Header格式（Generic TLP Header Format）
 
-##### 5.2.3.1   整体说明（General）
+##### 5.2.3.1   概括（General）
 
 如图 5‑3中，展示了一个4DW的通用TLP Header的格式和内容。在本节内，会对几乎所有事务的TLP Header中的公共字段进行总结，并会在稍后讨论与特定事务类型相关Header格式差异。
 
@@ -140,7 +142,7 @@ n 该组件用法：可选的功能。当需要使用时，ECRC的大小永远�
 
 图 5‑3通用TLP Header的各字段域
 
-##### 5.2.3.2   通用Header各字段总结
+##### 5.2.3.2   通用Header各字段摘要
 
 表 5‑2中对通用TLP Header中的每个字段的大小和用途进行了总结。需要注意的是，在图 5‑3中被标注为“R”的字段是保留字段（reserve），应该被置为0。
 
@@ -148,20 +150,20 @@ n 该组件用法：可选的功能。当需要使用时，ECRC的大小永远�
 
 | Header中的字段名                                             | Header中的位置                          | 字段作用                                                     |
 | ------------------------------------------------------------ | --------------------------------------- | ------------------------------------------------------------ |
-| Fmt[2:0]  格式  (Format)                                     | Byte  0  Bit  7:5                       | 这几个bit的编码信息是关于Header的大小，以及这个TLP中是否存在数据荷载部分：  n 000b：3DW Header，无数据荷载  n 001b：4DW Header，无数据荷载  n 010b：3DW Header，有数据荷载  n 011b：4DW Header，有数据荷载  n 100b：1DW，属于Prefix TLP  不难发现，除了Prefix TLP外，只要Fmt[0]=0那么就是3DW Header，反之则为4DW Header。若Fmt[1]=0那么就无数据荷载，反之则有数据荷载。  对于低于4GB的地址，必须使用3DW Header。协议规定，如果使用4DW Header但是地址小于4GB，也就是说将64bit地址的高32bit置为0，那么这种情况下接收方的行为是未进行定义的（undefined）。 |
+| Fmt[2:0]  格式  (Format)                                     | Byte  0  Bit  7:5                       | 这些bit的编码信息是关于Header的大小，以及这个TLP中是否存在数据荷载部分：  n 000b：3DW Header，无数据荷载  n 001b：4DW Header，无数据荷载  n 010b：3DW Header，有数据荷载  n 011b：4DW Header，有数据荷载  n 100b：1DW，属于Prefix TLP  不难发现，除了Prefix TLP外，只要Fmt[0]=0那么就是3DW Header，反之则为4DW Header。若Fmt[1]=0那么就无数据荷载，反之则有数据荷载。  对于低于4GB的地址，必须使用3DW Header。协议规定，如果使用4DW Header但是地址小于4GB，也就是说将64bit地址的高32bit置为0，那么这种情况下接收方的行为是未进行定义的（undefined）。 |
 | Type[4:0]  类型                                              | Byte  0  Bit  4:0                       | 这些bit编码的信息是TLP的不同事务类型。Type字段用来跟Fmt[1:0]字段一起指定了事务类型、Header大小、以及是否存在数据荷载。更多详细信息请参阅“Generic Header  Field Details”一节。 |
-| TC[2:0]  流量类型  (Traffic  Class)                          | Byte  1  Bit  6:4                       | 这些bit表示将应用于这个TLP以及其完成包（如果需要完成包）的流量类型：  n 000b：Traffic Class  0（默认）  n 001b：Traffic Class  1  ……  n 111b：Traffic Class  7  TC 0是默认类型，而TC 1-7是用来提供差异化的服务。更多信息请参阅“Traffic Class”一节。 |
+| TC[2:0]  流量类型  (Traffic  Class)                          | Byte  1  Bit  6:4                       | 这些bit表示将应用于这个TLP和与之完成相关（如果需要完成包）的流量类型：  n 000b：Traffic Class  0（默认）  n 001b：Traffic Class  1  ……  n 111b：Traffic Class  7  TC 0是默认类型，而TC 1-7是用来提供差异化的服务。更多信息请参阅“Traffic Class”一节。 |
 | Attr[2]  属性  (Attribute)                                   | Byte  1  Bit  2                         | 这个第三位的Attribute位（它共有3位）用于表示这个TLP是否使用基于ID的排序（ID-based Ordering）。更多内容请参阅“ID Based Ordering”一节。 |
 | TH  TLP处理提示  (TLP  Processing Hints)                     | Byte  1  Bit  0                         | 它用于表示何时TLP中会包含TLP提示（TLP Hints），以便让系统了解如何更好的处理这个TLP。更多内容请参阅“TPH（TLP Processing Hints）”。 |
 | TD  TLP摘要  (TLP  Digest)                                   | Byte  2  Bit  7                         | 如果TD=1，那么这个TLP中将包括可选的4Byte TLP Digest字段，也就是ECRC值。  它有一些规则：  n 所有的接收者都必须要通过这个bit来检查是否存在Digest字段。  n 如果一个TLP的TD=1，但是它又没有Digest，那么它将被当做畸形TLP（Malformed TLP）处理。  n 如果接收设备支持ECRC校验，且此TLP内TD=1，那么这个接收设备必须进行校验。  n 如果一个作为TLP最终目的地的设备并不支持ECRC校验（因为这是可选功能），那么它必须要忽略Digest字段。  更多内容请参阅“CRC”和“ECRC Generating and Checking”这两节。 |
 | EP  受污染的数据  (Poisoned Data)                            | Byte 2  Bit 6                           | 如果EP=1，那么就认为所有伴随此数据的数据都是无效的，尽管相关事务依然允许正常的完成。关于Poisoned数据包的更多内容，请参阅“Data Poisoning”一节。 |
 | Attr[1:0]  属性  (Attributes)                                | Byte  2  Bit  5:4                       | Bit 5 = Relax Ordering（宽松排序）：当它被置为1时，这个TLP会启用PCI-X的宽松排序。如果它为0，则是用PCI的严格的PCI排序（strict PCI ordering）。  Bit 4 = No Snoop（无窥探）：当置为1时，Requester的意思是这个TLP不会存在host cache一致性的问题（host cache coherency issues），因此系统硬件可以通过跳过普通处理器对这个请求的cache窥探，以此来节省时间。而当这一位被置为0时，需要进行PCI-type的cache窥探保护。 |
-| AT[1:0]  地址类型  (Address  Type)                           | Byte  2  Bit  3:2                       | 对于Memory和Atomic请求来说，这个字段用于支持虚拟化系统（virtualized system）的地址翻译。这个地址翻译协议由一个单独的规范进行描述，被称为Address  Translation Services，可以看到该字段的编码为：  n 00 = 默认/未翻译（Default/Untranslated）  n 01 = 翻译请求（Translation Request）  n 10 = 已翻译（Translated）  n 11 = 保留reserve |
+| AT[1:0]  地址类型  (Address  Type)                           | Byte  2  Bit  3:2                       | 对于Memory和Atomic请求来说，这个字段用于支持虚拟化系统（virtualized system）的地址转换。这个地址转换协议由一个单独的规范进行描述，被称为Address  Translation Services，可以看到该字段的编码为：  n 00 = 默认/未转换（Default/Untranslated）  n 01 = 转换请求（Translation Request）  n 10 = 已转换（Translated）  n 11 = 保留reserve |
 | Length[9:0]  长度                                            | Byte  2  Bit  1:0     Byte  3  Bit  7:0 | TLP数据荷载传输量的大小，单位为DW，编码方式为：  n 00 0000 0001b = 1DW  n 00 0000 0010b = 2DW  ……  n 11 1111 1111b = 1023DW  n 00 0000 0000 = 1024DW |
 | Last  DW BE[3:0]  末尾DW的字节使能  (Last  DW Byte Enable)   | Byte  7  Bit  7:4                       | 这个字段中的4个高有效的bit，与数据荷载中最后一个DW中的4个Byte一一对应。  n Bit 7 = 1：末尾DW的Byte 3是有效的；否则为无效的。  n Bit 6 = 1：末尾DW的Byte 2是有效的；否则为无效的。  n Bit 5 = 1：末尾DW的Byte 1是有效的；否则为无效的。  n Bit 4 = 1：末尾DW的Byte 0是有效的；否则为无效的。 |
 | 1st  DW BE[3:0]  第一个DW的字节使能  (First  DW Byte Enable) | Byte  7  Bit  3:0                       | 这个字段中的4个高有效的bit，与数据荷载中第一个DW中的4个Byte一一对应。  n Bit 3 = 1：末尾DW的Byte 3是有效的；否则为无效的。  n Bit 2 = 1：末尾DW的Byte 2是有效的；否则为无效的。  n Bit 1 = 1：末尾DW的Byte 1是有效的；否则为无效的。  n Bit 0 = 1：末尾DW的Byte 0是有效的；否则为无效的。 |
 
-表 5‑2通用TLP Header的各字段总结
+表 5‑2通用TLP Header的各字段摘要
 
 #### 5.2.4     通用TLP Header详细说明（Generic TLP Header Details）
 
