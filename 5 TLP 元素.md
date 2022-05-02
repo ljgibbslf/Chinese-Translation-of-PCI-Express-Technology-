@@ -22,7 +22,7 @@
 
 除了逻辑空闲符号（Logical Idle symbol）和Ordered Set的物理层包外，在活跃的PCIe链路上移动传输的信息的基本组块被称为Packet（包），包是由符号组成的。链路上交换的两类主要的数据包为高层的TLP（Transaction Layer Packet，事务层包），和低层的用于链路维护的包称为DLLP（Data Link Layer Packet，数据链路层包）。这些包和它们的传输流如图 5‑1所示。物理层的Ordered Set也是一种包，但是它并不像TLP和DLLP一样会被封装上包起始符号和包结束符号（也就是前面章节所讲的组帧符号），并且Ordered Set也并没有像TLP和DLLP一样的字节条带化过程，相反地，Ordered Set会在链路的每个通道（lane）上都复制一份，而不是像字节条带化一样把信息按字节分配到各个通道上。
 
-![img](file:///C:/Users/FANLI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image210.jpg)
+![image-20220502163039798](img/5%20TLP%20%E5%85%83%E7%B4%A0/image-20220502163039798.png)
 
 图 5‑1 TLP和DLLP包
 
@@ -62,9 +62,9 @@
 
 图 5‑2 PCIe TLP的组包与拆包
 
-n 发送方
+##### 发送方
 
-\1.    设备A的Device Core向它的PCIe接口发送一个请求（具体Device Core是如何给PCIe接口发送请求的，这并不是PCIe协议或者本书的讨论范畴）。这个请求中包括：
+1.    设备A的Device Core向它的PCIe接口发送一个请求（具体Device Core是如何给PCIe接口发送请求的，这并不是PCIe协议或者本书的讨论范畴）。这个请求中包括：
 
 —  目标地址或者ID（也就是路由信息）
 
@@ -78,21 +78,21 @@ n 发送方
 
 —  请求的自身属性（No Snoop无窥探、Relaxed Ordering宽松排序，等等）
 
-\2.    基于这个请求，事务层将会组建TLP Header，并在其后附上数据荷载（如果有），以及如果启用并支持可选项的话也可以再附上ECRC（End-to-End CRC）。随后TLP就会被放入一个虚拟通道Buffer。这个虚拟通道会根据事务排序规则来管理TLP的顺序，并且也要在TLP被向下转发到数据链路层之前，确认接收方有足够的Buffer来接收一个TLP。
+2.    基于这个请求，事务层将会组建TLP Header，并在其后附上数据荷载（如果有），以及如果启用并支持可选项的话也可以再附上ECRC（End-to-End CRC）。随后TLP就会被放入一个虚拟通道Buffer。这个虚拟通道会根据事务排序规则来管理TLP的顺序，并且也要在TLP被向下转发到数据链路层之前，确认接收方有足够的Buffer来接收一个TLP。
 
-\3.    当TLP到达数据链路层，它会被分配一个序列号（Sequence Number），并基于TLP的内容和序列号来计算出一个LCRC（Link CRC）来附加在原TLP后。然后会将经过这些处理过程之后的TLP保存一个副本，这个副本会保存在数据链路层的重传Buffer（Replay Buffer，也可称为Retry Buffer）中，这是为了应对传输出错的情况。与此同时，这个TLP也会被向下转发至物理层。
+3.    当TLP到达数据链路层，它会被分配一个序列号（Sequence Number），并基于TLP的内容和序列号来计算出一个LCRC（Link CRC）来附加在原TLP后。然后会将经过这些处理过程之后的TLP保存一个副本，这个副本会保存在数据链路层的重传Buffer（Replay Buffer，也可称为Retry Buffer）中，这是为了应对传输出错的情况。与此同时，这个TLP也会被向下转发至物理层。
 
-\4.    物理层将会进行一系列的操作来准备对这个数据包进行串行传输，包括字节条带化（Byte Striping）、扰码（Scrambling）、编码（Encoding）以及并串转换（Serializing）。对于Gen1和Gen2的设备，当进行8b/10b编码时，会将STP和END这两个控制字符分别加在TLP的首端和尾端。最后，这个数据包通过链路进行传输。在Gen3操作模式中，STP令牌（STP token）会被添加在TLP的首端，但是并不会在尾端加上END，而是在STP令牌中包含TLP大小的信息来判断TLP的尾部位置。
+4.    物理层将会进行一系列的操作来准备对这个数据包进行串行传输，包括字节条带化（Byte Striping）、扰码（Scrambling）、编码（Encoding）以及并串转换（Serializing）。对于Gen1和Gen2的设备，当进行8b/10b编码时，会将STP和END这两个控制字符分别加在TLP的首端和尾端。最后，这个数据包通过链路进行传输。在Gen3操作模式中，STP令牌（STP token）会被添加在TLP的首端，但是并不会在尾端加上END，而是在STP令牌中包含TLP大小的信息来判断TLP的尾部位置。
 
  
 
-n 接收方
+##### 接收方
 
-\5.    在接收方（本例中是Device B），为了发送包所做的一切准备现在都必须撤销。物理层将对比特流进行串并转换（deserialize）、对串并转换后的符号进行解码，然后再进行字节反条带化（un-stripes）。控制字符将被移除，因为它们仅在物理层有意义，然后这个数据包就会被向上转发至数据链路层。
+5.    在接收方（本例中是Device B），为了发送包所做的一切准备现在都必须撤销。物理层将对比特流进行串并转换（deserialize）、对串并转换后的符号进行解码，然后再进行字节反条带化（un-stripes）。控制字符将被移除，因为它们仅在物理层有意义，然后这个数据包就会被向上转发至数据链路层。
 
-\6.    数据链路层将会计算CRC（具体一点是LCRC）并与TLP中的CRC进行比较。如果CRC比较结果相同，那么就再检查序列号（Sequence Number）。如果都没有出现错误，那就把CRC和序列号都从TLP剥除，并随后将TLP向上转发给接收方事务层，与此同时要通过返回给发送方一个Ack DLLP来通知发送方这个TLP被成功接收。相反地，如果前面的过程中检查出了错误，那么就要返回给发送方一个Nak DLLP，这样发送方将会使用它的重传Buffer来对TLP进行重传。
+6.    数据链路层将会计算CRC（具体一点是LCRC）并与TLP中的CRC进行比较。如果CRC比较结果相同，那么就再检查序列号（Sequence Number）。如果都没有出现错误，那就把CRC和序列号都从TLP剥除，并随后将TLP向上转发给接收方事务层，与此同时要通过返回给发送方一个Ack DLLP来通知发送方这个TLP被成功接收。相反地，如果前面的过程中检查出了错误，那么就要返回给发送方一个Nak DLLP，这样发送方将会使用它的重传Buffer来对TLP进行重传。
 
-\7.    在事务层，TLP被进行解码，并将TLP内的信息传递给Device Core来进行相应的操作。如果当前接收设备就是数据包的最终目的地，那么它可以检查ECRC错误，并在发现任何ECRC错误时报告给Device Core。
+7.    在事务层，TLP被进行解码，并将TLP内的信息传递给Device Core来进行相应的操作。如果当前接收设备就是数据包的最终目的地，那么它可以检查ECRC错误，并在发现任何ECRC错误时报告给Device Core。
 
 #### 5.2.2     TLP结构
 
@@ -104,33 +104,33 @@ n 接收方
 
 下面对表 5‑1中的内容进行复述。
 
-n Header
+- Header
 
-n 协议层次：事务层
+- 协议层次：事务层
 
-n 该组件用法：大小为3或4DW（12或16Bytes）。Header的格式会随类型而变化，但是Header也定义了一些参数，包括：
+- 该组件用法：大小为3或4DW（12或16Bytes）。Header的格式会随类型而变化，但是Header也定义了一些参数，包括：
 
-o 事务类型（Transaction Type）
+	- 事务类型（Transaction Type）
 
-o 目标地址、ID等
+	- 目标地址、ID等
 
-o 传输数据量大小（如果有数据）、字节使能（Byte Enable）
+	- 传输数据量大小（如果有数据）、字节使能（Byte Enable）
 
-o 属性（Attribute）
+	- 属性（Attribute）
 
-o 流量类型（Traffic Class）
+	- 流量类型（Traffic Class）
 
-n Data
+- Data
 
-n 协议层次：事务层
+- 协议层次：事务层
 
-n 该组件用法：可选的1-1024DW大小的数据荷载，具体的大小由字节使能或者字节对齐的开始和结束地址来进行描述。需要注意指定的长度不能为0，但是一个0长度的读取可以通过指定长度为1DW然后将字节使能全部置为0来进行近似处理（在某些情况下会使用）。来自Completer的结果数据虽然是未定义的种类，但是Requester并不使用它，因此就和指定0长度的目的等效了。
+- 该组件用法：可选的1-1024DW大小的数据荷载，具体的大小由字节使能或者字节对齐的开始和结束地址来进行描述。需要注意指定的长度不能为0，但是一个0长度的读取可以通过指定长度为1DW然后将字节使能全部置为0来进行近似处理（在某些情况下会使用）。来自Completer的结果数据虽然是未定义的种类，但是Requester并不使用它，因此就和指定0长度的目的等效了。
 
-n Digest/ECRC
+- Digest/ECRC
 
-n 协议层次：事务层
+- 协议层次：事务层
 
-n 该组件用法：可选的功能。当需要使用时，ECRC的大小永远为1DW。
+- 该组件用法：可选的功能。当需要使用时，ECRC的大小永远为1DW。
 
 #### 5.2.3     通用TLP Header格式（Generic TLP Header Format）
 
@@ -150,18 +150,18 @@ n 该组件用法：可选的功能。当需要使用时，ECRC的大小永远�
 
 | Header中的字段名                                             | Header中的位置                          | 字段作用                                                     |
 | ------------------------------------------------------------ | --------------------------------------- | ------------------------------------------------------------ |
-| Fmt[2:0]  格式  (Format)                                     | Byte  0  Bit  7:5                       | 这些bit的编码信息是关于Header的大小，以及这个TLP中是否存在数据荷载部分：  n 000b：3DW Header，无数据荷载  n 001b：4DW Header，无数据荷载  n 010b：3DW Header，有数据荷载  n 011b：4DW Header，有数据荷载  n 100b：1DW，属于Prefix TLP  不难发现，除了Prefix TLP外，只要Fmt[0]=0那么就是3DW Header，反之则为4DW Header。若Fmt[1]=0那么就无数据荷载，反之则有数据荷载。  对于低于4GB的地址，必须使用3DW Header。协议规定，如果使用4DW Header但是地址小于4GB，也就是说将64bit地址的高32bit置为0，那么这种情况下接收方的行为是未进行定义的（undefined）。 |
+| Fmt[2:0]  格式  (Format)                                     | Byte  0  Bit  7:5                       | 这些bit的编码信息是关于Header的大小，以及这个TLP中是否存在数据荷载部分： <br> 000b：3DW Header，无数据荷载 <br> 001b：4DW Header，无数据荷载 <br> 010b：3DW Header，有数据荷载 <br> 011b：4DW Header，有数据荷载 <br> 100b：1DW，属于Prefix TLP  不难发现，除了Prefix TLP外，只要Fmt[0]=0那么就是3DW Header，反之则为4DW Header。若Fmt[1]=0那么就无数据荷载，反之则有数据荷载。  对于低于4GB的地址，必须使用3DW Header。协议规定，如果使用4DW Header但是地址小于4GB，也就是说将64bit地址的高32bit置为0，那么这种情况下接收方的行为是未进行定义的（undefined）。 |
 | Type[4:0]  类型                                              | Byte  0  Bit  4:0                       | 这些bit编码的信息是TLP的不同事务类型。Type字段用来跟Fmt[1:0]字段一起指定了事务类型、Header大小、以及是否存在数据荷载。更多详细信息请参阅“Generic Header  Field Details”一节。 |
-| TC[2:0]  流量类型  (Traffic  Class)                          | Byte  1  Bit  6:4                       | 这些bit表示将应用于这个TLP和与之完成相关（如果需要完成包）的流量类型：  n 000b：Traffic Class  0（默认）  n 001b：Traffic Class  1  ……  n 111b：Traffic Class  7  TC 0是默认类型，而TC 1-7是用来提供差异化的服务。更多信息请参阅“Traffic Class”一节。 |
+| TC[2:0]  流量类型  (Traffic  Class)                          | Byte  1  Bit  6:4                       | 这些bit表示将应用于这个TLP和与之完成相关（如果需要完成包）的流量类型： <br> 000b：Traffic Class  0（默认） <br> 001b：Traffic Class  1  …… <br> 111b：Traffic Class  7  TC 0是默认类型，而TC 1-7是用来提供差异化的服务。更多信息请参阅“Traffic Class”一节。 |
 | Attr[2]  属性  (Attribute)                                   | Byte  1  Bit  2                         | 这个第三位的Attribute位（它共有3位）用于表示这个TLP是否使用基于ID的排序（ID-based Ordering）。更多内容请参阅“ID Based Ordering”一节。 |
 | TH  TLP处理提示  (TLP  Processing Hints)                     | Byte  1  Bit  0                         | 它用于表示何时TLP中会包含TLP提示（TLP Hints），以便让系统了解如何更好的处理这个TLP。更多内容请参阅“TPH（TLP Processing Hints）”。 |
-| TD  TLP摘要  (TLP  Digest)                                   | Byte  2  Bit  7                         | 如果TD=1，那么这个TLP中将包括可选的4Byte TLP Digest字段，也就是ECRC值。  它有一些规则：  n 所有的接收者都必须要通过这个bit来检查是否存在Digest字段。  n 如果一个TLP的TD=1，但是它又没有Digest，那么它将被当做畸形TLP（Malformed TLP）处理。  n 如果接收设备支持ECRC校验，且此TLP内TD=1，那么这个接收设备必须进行校验。  n 如果一个作为TLP最终目的地的设备并不支持ECRC校验（因为这是可选功能），那么它必须要忽略Digest字段。  更多内容请参阅“CRC”和“ECRC Generating and Checking”这两节。 |
+| TD  TLP摘要  (TLP  Digest)                                   | Byte  2  Bit  7                         | 如果TD=1，那么这个TLP中将包括可选的4Byte TLP Digest字段，也就是ECRC值。  它有一些规则： <br> 所有的接收者都必须要通过这个bit来检查是否存在Digest字段。 <br> 如果一个TLP的TD=1，但是它又没有Digest，那么它将被当做畸形TLP（Malformed TLP）处理。 <br> 如果接收设备支持ECRC校验，且此TLP内TD=1，那么这个接收设备必须进行校验。 <br> 如果一个作为TLP最终目的地的设备并不支持ECRC校验（因为这是可选功能），那么它必须要忽略Digest字段。  更多内容请参阅“CRC”和“ECRC Generating and Checking”这两节。 |
 | EP  受污染的数据  (Poisoned Data)                            | Byte 2  Bit 6                           | 如果EP=1，那么就认为所有伴随此数据的数据都是无效的，尽管相关事务依然允许正常的完成。关于Poisoned数据包的更多内容，请参阅“Data Poisoning”一节。 |
 | Attr[1:0]  属性  (Attributes)                                | Byte  2  Bit  5:4                       | Bit 5 = Relax Ordering（宽松排序）：当它被置为1时，这个TLP会启用PCI-X的宽松排序。如果它为0，则是用PCI的严格的PCI排序（strict PCI ordering）。  Bit 4 = No Snoop（无窥探）：当置为1时，Requester的意思是这个TLP不会存在host cache一致性的问题（host cache coherency issues），因此系统硬件可以通过跳过普通处理器对这个请求的cache窥探，以此来节省时间。而当这一位被置为0时，需要进行PCI-type的cache窥探保护。 |
-| AT[1:0]  地址类型  (Address  Type)                           | Byte  2  Bit  3:2                       | 对于Memory和Atomic请求来说，这个字段用于支持虚拟化系统（virtualized system）的地址转换。这个地址转换协议由一个单独的规范进行描述，被称为Address  Translation Services，可以看到该字段的编码为：  n 00 = 默认/未转换（Default/Untranslated）  n 01 = 转换请求（Translation Request）  n 10 = 已转换（Translated）  n 11 = 保留reserve |
-| Length[9:0]  长度                                            | Byte  2  Bit  1:0     Byte  3  Bit  7:0 | TLP数据荷载传输量的大小，单位为DW，编码方式为：  n 00 0000 0001b = 1DW  n 00 0000 0010b = 2DW  ……  n 11 1111 1111b = 1023DW  n 00 0000 0000 = 1024DW |
-| Last  DW BE[3:0]  末尾DW的字节使能  (Last  DW Byte Enable)   | Byte  7  Bit  7:4                       | 这个字段中的4个高有效的bit，与数据荷载中最后一个DW中的4个Byte一一对应。  n Bit 7 = 1：末尾DW的Byte 3是有效的；否则为无效的。  n Bit 6 = 1：末尾DW的Byte 2是有效的；否则为无效的。  n Bit 5 = 1：末尾DW的Byte 1是有效的；否则为无效的。  n Bit 4 = 1：末尾DW的Byte 0是有效的；否则为无效的。 |
-| 1st  DW BE[3:0]  第一个DW的字节使能  (First  DW Byte Enable) | Byte  7  Bit  3:0                       | 这个字段中的4个高有效的bit，与数据荷载中第一个DW中的4个Byte一一对应。  n Bit 3 = 1：末尾DW的Byte 3是有效的；否则为无效的。  n Bit 2 = 1：末尾DW的Byte 2是有效的；否则为无效的。  n Bit 1 = 1：末尾DW的Byte 1是有效的；否则为无效的。  n Bit 0 = 1：末尾DW的Byte 0是有效的；否则为无效的。 |
+| AT[1:0]  地址类型  (Address  Type)                           | Byte  2  Bit  3:2                       | 对于Memory和Atomic请求来说，这个字段用于支持虚拟化系统（virtualized system）的地址转换。这个地址转换协议由一个单独的规范进行描述，被称为Address  Translation Services，可以看到该字段的编码为： <br> 00 = 默认/未转换（Default/Untranslated） <br> 01 = 转换请求（Translation Request） <br> 10 = 已转换（Translated） <br> 11 = 保留reserve |
+| Length[9:0]  长度                                            | Byte  2  Bit  1:0     Byte  3  Bit  7:0 | TLP数据荷载传输量的大小，单位为DW，编码方式为： <br> 00 0000 0001b = 1DW <br> 00 0000 0010b = 2DW  …… <br> 11 1111 1111b = 1023DW <br> 00 0000 0000 = 1024DW |
+| Last  DW BE[3:0]  末尾DW的字节使能  (Last  DW Byte Enable)   | Byte  7  Bit  7:4                       | 这个字段中的4个高有效的bit，与数据荷载中最后一个DW中的4个Byte一一对应。 <br> Bit 7 = 1：末尾DW的Byte 3是有效的；否则为无效的。 <br> Bit 6 = 1：末尾DW的Byte 2是有效的；否则为无效的。 <br> Bit 5 = 1：末尾DW的Byte 1是有效的；否则为无效的。 <br> Bit 4 = 1：末尾DW的Byte 0是有效的；否则为无效的。 |
+| 1st  DW BE[3:0]  第一个DW的字节使能  (First  DW Byte Enable) | Byte  7  Bit  3:0                       | 这个字段中的4个高有效的bit，与数据荷载中第一个DW中的4个Byte一一对应。 <br> Bit 3 = 1：末尾DW的Byte 3是有效的；否则为无效的。 <br> Bit 2 = 1：末尾DW的Byte 2是有效的；否则为无效的。 <br> Bit 1 = 1：末尾DW的Byte 1是有效的；否则为无效的。 <br> Bit 0 = 1：末尾DW的Byte 0是有效的；否则为无效的。 |
 
 表 5‑2通用TLP Header的各字段摘要
 
@@ -206,9 +206,9 @@ TLP的Digest位表示是否存在ECRC（End-to-End CRC）。如果当前支持�
 
 ECRC覆盖了所有在跨Fabric转发时不需要更改的字段。然而，当一个数据包在拓扑结构中移动时，有两个bit是可以合法的进行改变的：
 
-o Type字段的Bit 0：在一个配置事务通过一个Bridge时，这个配置事务有可能从Type 1变成Type 0，因为这个Bridge的次级总线有可能就是配置事务的目标总线。在这个情况下，Type地段的bit 0的值就会从1变成0。
-
-o EP（Error/Poisoned）bit：当一个TLP在网络结构中移动时，如果与这个数据包相关的数据被认为是损坏的，那么就有可能引发这个bit值的改变。这是一种可选的特性，称为错误转发（error forwarding）。
+	- Type字段的Bit 0：在一个配置事务通过一个Bridge时，这个配置事务有可能从Type 1变成Type 0，因为这个Bridge的次级总线有可能就是配置事务的目标总线。在这个情况下，Type地段的bit 0的值就会从1变成0。
+	
+	- EP（Error/Poisoned）bit：当一个TLP在网络结构中移动时，如果与这个数据包相关的数据被认为是损坏的，那么就有可能引发这个bit值的改变。这是一种可选的特性，称为错误转发（error forwarding）。
 
 ###### l 谁来检查ECRC
 
@@ -216,9 +216,9 @@ ECRC的预定目标是TLP的最终接收者。对LCRC（Link CRC）的校验是�
 
 关于ECRC校验中Switch的作用，PCIe协议做了两个声明：
 
-o 如果一个Switch支持ECRC校验，那么它需要对TLP目的地为Switch自身时，对这个TLP中的ECRC进行校验。如果TLP的目的地并不是Switch自身，那么Switch必须在保持ECRC不变的前提下对其进行转发，把ECRC作为TLP不可分割的一部分。“On all other TLPs a Switch must preserve the ECRC (forward it untouched) as an integral part of the TLP.”
-
-o 注意，Switch也可以对通过它的TLP进行ECRC检查。由Switch发现的ECRC错误的报告方法和其他设备一样，但是这不会改变TLP通过Switch的继续传输。“Note that a Switch may perform ECRC checking on TLPs passing through the Switch. ECRC Errors detected by the Switch are reported in the same way any other device would report them, but do not alter the TLPs passage through the Switch.”
+	- 如果一个Switch支持ECRC校验，那么它需要对TLP目的地为Switch自身时，对这个TLP中的ECRC进行校验。如果TLP的目的地并不是Switch自身，那么Switch必须在保持ECRC不变的前提下对其进行转发，把ECRC作为TLP不可分割的一部分。“On all other TLPs a Switch must preserve the ECRC (forward it untouched) as an integral part of the TLP.”
+	
+	- 注意，Switch也可以对通过它的TLP进行ECRC检查。由Switch发现的ECRC错误的报告方法和其他设备一样，但是这不会改变TLP通过Switch的继续传输。“Note that a Switch may perform ECRC checking on TLPs passing through the Switch. ECRC Errors detected by the Switch are reported in the same way any other device would report them, but do not alter the TLPs passage through the Switch.”
 
 ##### 5.2.4.3   使用字节使能（Using Byte Enables）
 
@@ -228,21 +228,21 @@ o 注意，Switch也可以对通过它的TLP进行ECRC检查。由Switch发现�
 
 ###### l 字节使能规则
 
-\1.    字节使能地各个bit是高有效的。如果某个字节使能bit值为0，那么就表示数据荷载中相应的字节不应该被Completer使用，因为这个字节是无效的。若某个字节使能bit值为1，那么就说明相应的字节应该被Completer使用。
+1.    字节使能地各个bit是高有效的。如果某个字节使能bit值为0，那么就表示数据荷载中相应的字节不应该被Completer使用，因为这个字节是无效的。若某个字节使能bit值为1，那么就说明相应的字节应该被Completer使用。
 
-\2.    如果有效的数据全都在一个单独的DW中，那么尾DW字节使能（Last DW Byte Enable）必须为0000b。
+2.    如果有效的数据全都在一个单独的DW中，那么尾DW字节使能（Last DW Byte Enable）必须为0000b。
 
-\3.    如果Header中的Length字段表示了这次传输数据量大于1DW，那么首DW字节使能（First DW Byte Enable）至少要有1个bit是有效的。
+3.    如果Header中的Length字段表示了这次传输数据量大于1DW，那么首DW字节使能（First DW Byte Enable）至少要有1个bit是有效的。
 
-\4.    如果Header中的Length字段表示了这次传输数据量大于等于3DW，那么首DW字节使能和尾DW字节使能都必须是相连的bit为1。在这种情况中，字节使能仅能用来提供有效起始地址和结束地址与DW对齐地址的字节偏移量。
+4.    如果Header中的Length字段表示了这次传输数据量大于等于3DW，那么首DW字节使能和尾DW字节使能都必须是相连的bit为1。在这种情况中，字节使能仅能用来提供有效起始地址和结束地址与DW对齐地址的字节偏移量。
 
-\5.    如果传输数据量大小为1DW，那么才能允许只有首DW字节使能内是不连续为1的情况。
+5.    如果传输数据量大小为1DW，那么才能允许只有首DW字节使能内是不连续为1的情况。
 
-\6.    如果传输数据量大小为1-2DW，那么才能允许首DW字节使能和第二DW字节使能内都是不连续为1的情况。
+6.    如果传输数据量大小为1-2DW，那么才能允许首DW字节使能和第二DW字节使能内都是不连续为1的情况。
 
-\7.    如果一个写请求，其Length字段表示其数据传输长度为1DW，但是它的字节使能均为无效，这种情况对Completer不会有影响。
+7.    如果一个写请求，其Length字段表示其数据传输长度为1DW，但是它的字节使能均为无效，这种情况对Completer不会有影响。
 
-\8.    如果一个读请求，其Length字段表示其需要的数据传输长度为1DW，但是没有字节使能有效，那么Completer会返回一个1DW数据荷载，这种数据荷载是未定义数据（undefined data）。这种情况可能被用作一种刷新机制（Flush mechanism），它利用事务排序规则，在这个undefine data的读请求完成包返回之前，强制之前发出的所有posted write输出到内存中。
+8.    如果一个读请求，其Length字段表示其需要的数据传输长度为1DW，但是没有字节使能有效，那么Completer会返回一个1DW数据荷载，这种数据荷载是未定义数据（undefined data）。这种情况可能被用作一种刷新机制（Flush mechanism），它利用事务排序规则，在这个undefine data的读请求完成包返回之前，强制之前发出的所有posted write输出到内存中。
 
 ###### l 字节使能示例
 
@@ -278,21 +278,21 @@ o 注意，Switch也可以对通过它的TLP进行ECRC检查。由Switch发现�
 
 当一个TLP带有数据荷载时，就要遵从如下规则：
 
-\1.    Length字段仅表示数据荷载的长度。
+1.    Length字段仅表示数据荷载的长度。
 
-\2.    数据荷载的首字节（紧挨着Header的字节）的地址永远是最低位的。
+2.    数据荷载的首字节（紧挨着Header的字节）的地址永远是最低位的。
 
-\3.    Length字段永远表示的是整数DW的传输长度。对于不满整数DW的情况是使用首DW字节使能和尾DW字节使能来进行表示的。
+3.    Length字段永远表示的是整数DW的传输长度。对于不满整数DW的情况是使用首DW字节使能和尾DW字节使能来进行表示的。
 
-\4.    在协议中有声明，当一个Completer在响应一个单独的Memory请求时如果返回了多个TLP，那么中间的（也就是非首尾的）TLP的数据荷载的地址必须结束于RC的64byte或128byte自然对齐的边界上。具体是那种边界是由一个可配置位称为RCB（读完成边界，Read Completion Boundary）来控制的。所有的其他设备遵循PCI-X协议，并会将这种情况的TLP截断在128byte自然对齐边界上。
+4.    在协议中有声明，当一个Completer在响应一个单独的Memory请求时如果返回了多个TLP，那么中间的（也就是非首尾的）TLP的数据荷载的地址必须结束于RC的64byte或128byte自然对齐的边界上。具体是那种边界是由一个可配置位称为RCB（读完成边界，Read Completion Boundary）来控制的。所有的其他设备遵循PCI-X协议，并会将这种情况的TLP截断在128byte自然对齐边界上。
 
-\5.    当发送Message请求时，Length字段是保留字段，除非Message是带有数据荷载的，也就是MsgD。
+5.    当发送Message请求时，Length字段是保留字段，除非Message是带有数据荷载的，也就是MsgD。
 
-\6.    TLP的数据荷载一定不能大于设备控制寄存器（Device Control Register）中的最大数据荷载字段（Max_Payload_Size）。因为只有写事务会带有数据荷载，因此这种限制并不应用于读请求。接收方需要在被写入时检查是否存在Max_Payload_Size的违例，如果存在则认为这是一个畸形TLP（Malformed TLP）。
+6.    TLP的数据荷载一定不能大于设备控制寄存器（Device Control Register）中的最大数据荷载字段（Max_Payload_Size）。因为只有写事务会带有数据荷载，因此这种限制并不应用于读请求。接收方需要在被写入时检查是否存在Max_Payload_Size的违例，如果存在则认为这是一个畸形TLP（Malformed TLP）。
 
-\7.    接收方还需要检查Length字段和TLP实际传输的数据荷载长度。如果二者不相同则认为这是一个畸形TLP（Malformed TLP）。
+7.    接收方还需要检查Length字段和TLP实际传输的数据荷载长度。如果二者不相同则认为这是一个畸形TLP（Malformed TLP）。
 
-\8.    请求包中的起始地址和传输长度的组合信息，一定不能造成跨4KB边界的Memory访问。虽然这种检查是可选的，但是一旦发现了跨4KB边界访问的情况就认为这是一个畸形TLP（Malformed TLP）。
+8.    请求包中的起始地址和传输长度的组合信息，一定不能造成跨4KB边界的Memory访问。虽然这种检查是可选的，但是一旦发现了跨4KB边界访问的情况就认为这是一个畸形TLP（Malformed TLP）。
 
 #### 5.2.5     具体的TLP格式：请求TLP和完成TLP
 
@@ -377,19 +377,19 @@ PCIe的Memory事务包含两种类型：第一种是读请求及其相对应的�
 
 Memory请求的特性包括：
 
-\1.    Memory数据传输不允许跨4KB边界。
+1.    Memory数据传输不允许跨4KB边界。
 
-\2.    所有的内存映射写（Memory-Mapped Write）都是Posted的，以此来提升性能。
+2.    所有的内存映射写（Memory-Mapped Write）都是Posted的，以此来提升性能。
 
-\3.    使用32bit或者64bit地址方式。
+3.    使用32bit或者64bit地址方式。
 
-\4.    数据荷载大小在0-1024DW之间（0-4KB）。
+4.    数据荷载大小在0-1024DW之间（0-4KB）。
 
-\5.    QoS（Quality of Service）特性可以被使用，最多可以有8个流量类型。
+5.    QoS（Quality of Service）特性可以被使用，最多可以有8个流量类型。
 
-\6.    No Snoop属性可以在事务访问主存时，用来减轻系统对窥探处理器Cache的需求。
+6.    No Snoop属性可以在事务访问主存时，用来减轻系统对窥探处理器Cache的需求。
 
-\7.    Relaxed Ordering属性可以使得数据包传输路径上的设备对这个TLP使用宽松排序规则，以此来提升性能。
+7.    Relaxed Ordering属性可以使得数据包传输路径上的设备对这个TLP使用宽松排序规则，以此来提升性能。
 
 ##### 5.2.5.3   Configuration请求（Configuration Request）
 
@@ -469,13 +469,13 @@ Completion（完成包）是用来响应Non-Posted请求的，除非有错误阻
 
 ###### l 完成包状态码总结（Summary of Completion Status Codes）
 
-o 000b（SC）Successful Completion成功完成：请求被正确服务。
-
-o 001b（UR）Unsupported Request不支持的请求：对于Completer来说，此请求是非法的或者是无法被识别的。这是一种出错的情况，至于Completer如何进行响应则要根据Completer对应的PCIe协议版本来。在PCIe 1.1之前，这种情况被视为一种不可纠正的错误，但是在1.1和之后的版本中，它被作为一种Advisory Non-Fatal Error（报告的非致命错误）。更多详细内容请参阅“Unsupported Request（UR） Status”一节。
-
-o 010b（CRS）Configuration Request Retry Status配置请求重试状态：Completer临时的无法服务一个配置请求，因此这个请求应该稍后再次尝试。
-
-o 100b（CA）Completer Abort完成者终止：Completer应该已经对请求事务进行了服务，但是因为某些原因导致了服务失败。这是一种不可纠正的错误。
+	- 000b（SC）Successful Completion成功完成：请求被正确服务。
+	
+	- 001b（UR）Unsupported Request不支持的请求：对于Completer来说，此请求是非法的或者是无法被识别的。这是一种出错的情况，至于Completer如何进行响应则要根据Completer对应的PCIe协议版本来。在PCIe 1.1之前，这种情况被视为一种不可纠正的错误，但是在1.1和之后的版本中，它被作为一种Advisory Non-Fatal Error（报告的非致命错误）。更多详细内容请参阅“Unsupported Request（UR） Status”一节。
+	
+	- 010b（CRS）Configuration Request Retry Status配置请求重试状态：Completer临时的无法服务一个配置请求，因此这个请求应该稍后再次尝试。
+	
+	- 100b（CA）Completer Abort完成者终止：Completer应该已经对请求事务进行了服务，但是因为某些原因导致了服务失败。这是一种不可纠正的错误。
 
 ###### l 计算低位地址字段（Calculating the Lower Address Field）
 
@@ -483,15 +483,17 @@ Completer设置这个字段是用来反映返回给Requester的数据荷载中�
 
 对于MRd（Memory Read）请求，这个地址就是从DW起始地址开始的偏移量：
 
-o 如果首DW字节使能字段为1111b，也就是第一个DW中的所有字节都是有效的，那么偏移量就是0。此时这个字段就与DW对齐的起始地址相同。
-
-o 如果首DW字节使能字段为1110b，也就是第一个DW中的高3个字节都是有效的，那么偏移量就是1。此时这个字段就等于DW对齐的起始地址+1。
-
-o 如果首DW字节使能字段为1100b，也就是第一个DW中的高2个字节都是有效的，那么偏移量就是2。此时这个字段就等于DW对齐的起始地址+2。
-
-o 如果首DW字节使能字段为1000b，也就是第一个DW中的仅有最高字节是有效的，那么偏移量就是3。此时这个字段就等于DW对齐的起始地址+3。
+	- 如果首DW字节使能字段为1111b，也就是第一个DW中的所有字节都是有效的，那么偏移量就是0。此时这个字段就与DW对齐的起始地址相同。
+	
+	- 如果首DW字节使能字段为1110b，也就是第一个DW中的高3个字节都是有效的，那么偏移量就是1。此时这个字段就等于DW对齐的起始地址+1。
+	
+	- 如果首DW字节使能字段为1100b，也就是第一个DW中的高2个字节都是有效的，那么偏移量就是2。此时这个字段就等于DW对齐的起始地址+2。
+	
+	- 如果首DW字节使能字段为1000b，也就是第一个DW中的仅有最高字节是有效的，那么偏移量就是3。此时这个字段就等于DW对齐的起始地址+3。
 
  
+
+
 
 一旦上述的计算完成，计算结果的低7bit就会被放入完成包Header的Lower Address字段，当读完成包小于整个数据荷载因而需要停止在第一个RCB（Read Completion Boundary）时，这个字段可以有助于更好的处理这种情况。若想将一个事务拆分成多个部分，则必须要在RCB上进行拆分，而到达第一个RCB时所传输的字节数量是根据起始地址而定的。
 
@@ -501,55 +503,55 @@ o 如果首DW字节使能字段为1000b，也就是第一个DW中的仅有最高
 
 这个bit仅由PCI-X Completer进行设置，但是如果使用了PCIe到PCI-X的Bridge，那么这些PCI-X Completer们就也可以出现在PCIe拓扑结构中。使用这个bit的规则包括：
 
-\1.    当一个读请求要拆分成多个完成包来返回数据时，Byte Count Modified这一位只能由PCI-X Completer进行置位。
+1.    当一个读请求要拆分成多个完成包来返回数据时，Byte Count Modified这一位只能由PCI-X Completer进行置位。
 
-\2.    仅有一系列完成包中的第一个可以将这个bit置为1，这表示第一个完成包内包含的Byte Count字段只反映这个完成包（第一个完成包）的数据荷载，而不是整个事务的数据荷载（通常情况下是表示整个事务的总数据荷载）。这样Requester就知道，即使Byte Count看起来似乎表示这是这个请求的最后一个完成包，但是实际上这个完成包之后还会有完成包，以此来满足原始请求对数据量的需求。
+2.    仅有一系列完成包中的第一个可以将这个bit置为1，这表示第一个完成包内包含的Byte Count字段只反映这个完成包（第一个完成包）的数据荷载，而不是整个事务的数据荷载（通常情况下是表示整个事务的总数据荷载）。这样Requester就知道，即使Byte Count看起来似乎表示这是这个请求的最后一个完成包，但是实际上这个完成包之后还会有完成包，以此来满足原始请求对数据量的需求。
 
-\3.    对于随后的一系列完成包来说，BCM位必须置为0，且Byte Count字段要用来反映剩下的所有数据荷载额字节数，就像它通常的含义一样。
+3.    对于随后的一系列完成包来说，BCM位必须置为0，且Byte Count字段要用来反映剩下的所有数据荷载额字节数，就像它通常的含义一样。
 
-\4.    当设备接收到BCM位为1的完成包时，它必须要正确的处理这种情况。
+4.    当设备接收到BCM位为1的完成包时，它必须要正确的处理这种情况。
 
-\5.    Completer要在带有数据荷载的完成包中设置Lower Address字段，以此来反映返回的第一个有效字节的地址。
+5.    Completer要在带有数据荷载的完成包中设置Lower Address字段，以此来反映返回的第一个有效字节的地址。
 
 ###### l 读请求数据返回（Data Returned For Read Requests）:
 
-\1.    一个读请求可能需要多个完成包来返回数据，但是最终传输的数据总量必须等于原始请求中要求的大小，否则可能导致完成包超时错误（Completion Timeout error）。
+1.    一个读请求可能需要多个完成包来返回数据，但是最终传输的数据总量必须等于原始请求中要求的大小，否则可能导致完成包超时错误（Completion Timeout error）。
 
-\2.    一个完成包只能用于服务一个请求。
+2.    一个完成包只能用于服务一个请求。
 
-\3.    IO和Configuration读请求所请求的数据量永远是1DW，并且只能由一个单独的完成包来返回数据。
+3.    IO和Configuration读请求所请求的数据量永远是1DW，并且只能由一个单独的完成包来返回数据。
 
-\4.    状态码不是SC（Successful Completion）的完成包将会终止当前事务。
+4.    状态码不是SC（Successful Completion）的完成包将会终止当前事务。
 
-\5.    在使用多个完成包来响应读请求时，必须注意读完成包边界（RCB，Read Completion Boundary）。对于RC来说，RCB会是64Bytes或者128Bytes，这是因为RC可以更改在其端口间移动的数据包的大小，具体的RCB的值可以在配置寄存器中看到。
+5.    在使用多个完成包来响应读请求时，必须注意读完成包边界（RCB，Read Completion Boundary）。对于RC来说，RCB会是64Bytes或者128Bytes，这是因为RC可以更改在其端口间移动的数据包的大小，具体的RCB的值可以在配置寄存器中看到。
 
-\6.    Bridge和EP可以用一个bit来实现软件对RCB大小的选择，64bytes或者128bytes。
+6.    Bridge和EP可以用一个bit来实现软件对RCB大小的选择，64bytes或者128bytes。
 
-\7.    完全在一个对齐RCB边界内的完成包们必须一次完成传输，这是因为这些RCB边界内的完成包的传输是不会到达RCB的，而RCB才是允许提前停止传输的位置，这样就必须对一个RCB边界内的所有完成包一次完成传输而不能中途停止。
+7.    完全在一个对齐RCB边界内的完成包们必须一次完成传输，这是因为这些RCB边界内的完成包的传输是不会到达RCB的，而RCB才是允许提前停止传输的位置，这样就必须对一个RCB边界内的所有完成包一次完成传输而不能中途停止。
 
-\8.    对于一个单独的读请求来说，若使用多个完成包来返回数据，那么这些数据必须以地址递增的顺序来返回。
+8.    对于一个单独的读请求来说，若使用多个完成包来返回数据，那么这些数据必须以地址递增的顺序来返回。
 
 ###### l 接收者对完成包的处理规则（Receiver Completion Handling Rules）:
 
-\1.    如果一个已经被接收的完成包并没有匹配上任何一个待完成的请求，那么它就是一个Unexpected Completion（意外完成包），将被当做是一种错误来处理。
+1.    如果一个已经被接收的完成包并没有匹配上任何一个待完成的请求，那么它就是一个Unexpected Completion（意外完成包），将被当做是一种错误来处理。
 
-\2.    如果完成包状态不是SC或者CRS，那么就将被当做是错误来处理，并且会清空与之相关联的Buffer空间。
+2.    如果完成包状态不是SC或者CRS，那么就将被当做是错误来处理，并且会清空与之相关联的Buffer空间。
 
-\3.    当RC在进行配置事务时接收到一个CRS状态的完成包，那么这个配置请求就被终止了。随后要进行的事情是根据具体实现而不同的，但是如果RC支持这种CRS状态的完成包处理，那么具体的操作将由RC控制寄存器中的CRS Software Visibility位来进行定义设置。
+3.    当RC在进行配置事务时接收到一个CRS状态的完成包，那么这个配置请求就被终止了。随后要进行的事情是根据具体实现而不同的，但是如果RC支持这种CRS状态的完成包处理，那么具体的操作将由RC控制寄存器中的CRS Software Visibility位来进行定义设置。
 
 —  如果CRS Software Visibility没有启用，那么RC将会重新发出配置请求，直到重复了一定的次数（具体实现中指定）之后就会放弃重发的操作，并认为请求目标存在问题。
 
 —  如果CRS Software Visibility是启用的，那么用来支持它的软件都会首先读取Vendor ID字段的两个字节，如果硬件接收到了这个读请求的CRS完成包，它将给返回的Vendor ID将会是0001h。这个值是PCI-SIG规定的保留值，它并不对应任何有效的Vendor，并会通知软件发生了这样的事件。这使得软件可以在等待目标Function准备就绪的这段时间里（通常在复位后需要1s时间），去执行其他的任务，而不是停滞不前。任何其他的配置读或者写（除了最开始的配置读Vendor ID）都会被RC自动重试重发，直到达到设计的重复次数。
 
-\4.    如果一个请求并不是配置请求，但是它的完成包出现了CRS状态，那么这个完成包将被认为是一个畸形TLP（Malformed TLP）。
+4.    如果一个请求并不是配置请求，但是它的完成包出现了CRS状态，那么这个完成包将被认为是一个畸形TLP（Malformed TLP）。
 
-\5.    当完成包状态码为保留组合时，并不是定义出的那几种，就把它当做UR（Unsupported Request）一样处理。
+5.    当完成包状态码为保留组合时，并不是定义出的那几种，就把它当做UR（Unsupported Request）一样处理。
 
-\6.    如果接收到的一个读完成包或者一个原子操作完成包的状态码不是SC，那么这个完成包就不会携带数据，并且Requester必须要考虑终止这个完成包对应的请求。至于Requester具体如何处理这种情况则根据具体实现而定。
+6.    如果接收到的一个读完成包或者一个原子操作完成包的状态码不是SC，那么这个完成包就不会携带数据，并且Requester必须要考虑终止这个完成包对应的请求。至于Requester具体如何处理这种情况则根据具体实现而定。
 
-\7.    在使用多个完成包来响应一个读请求的情况下，任何一个完成包的状态只要不是SC，那么就会终止这个事务。设备如何处理出错之前接收到的数据根据具体实现而定。
+7.    在使用多个完成包来响应一个读请求的情况下，任何一个完成包的状态只要不是SC，那么就会终止这个事务。设备如何处理出错之前接收到的数据根据具体实现而定。
 
-\8.    为了保持对PCI的兼容性，RC需要在一个配置事务被UR结束时，合成一个全1的读取值。这就类同于枚举软件尝试从不存在的设备中读取数据时的出现的PCI Master Abort一样。
+8.    为了保持对PCI的兼容性，RC需要在一个配置事务被UR结束时，合成一个全1的读取值。这就类同于枚举软件尝试从不存在的设备中读取数据时的出现的PCI Master Abort一样。
 
 ##### 5.2.5.5   消息请求（Message Requests）
 
@@ -569,19 +571,19 @@ Message请求取代了PCI/PCI-X中使用的许多中断（interrupt）、错误�
 
 | 字段名称                                  | 位于Header中的Byte/Bit                                       | 功能                                                         |
 | ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Fmt[2:0]  格式  （Format）                | Byte  0 Bit 7:5                                              | Message始终为4DW Header：  001b=4DW，无数据  011b=4DW，有数据 |
-| Type[4:0]  类型                           | Byte  0 Bit 4:0                                              | TLP包的Type字段。  o Bit 4:3：  10b=Msg  o Bit 2:0：（Message路由子域）  000b=到RC的隐式路由。  001b=使用地址路由  010b=使用ID路由  011b=来自RC的隐式路由广播  100b=本地；终结于首级接收者  101b=收集并路由至RC  其他值=保留值，作为本地处理 |
+| Fmt[2:0]  格式  （Format）                | Byte  0 Bit 7:5                                              | Message始终为4DW Header：  001b=4DW，无数据  <br>011b=4DW，有数据 |
+| Type[4:0]  类型                           | Byte  0 Bit 4:0                                              | TLP包的Type字段。 <br> Bit 4:3：  10b=Msg <br> Bit 2:0：（Message路由子域）<br>000b=到RC的隐式路由。<br>001b=使用地址路由  <br/>010b=使用ID路由  <br/>011b=来自RC的隐式路由广播 <br/>100b=本地；终结于首级接收者  <br/>101b=收集并路由至RC  其他值=保留值，作为本地处理 |
 | TC[2:0]  流量类型  （Traffic Class）      | Byte  1 Bit 6:4                                              | Message的TC始终为0，以确保它们不会影响到高优先级的数据包。   |
 | Attr[2]  属性  （Attribute）              | Byte  1 Bit 2                                                | 表示这个TLP是否使用基于ID的排序（ID-based Ordering）。更多内容请参阅“ID Based Ordering（IDO）”一节。 |
-| TH  TLP处理提示  （TLP Processing Hints） | Byte  1 Bit 0                                                | Message中，除非另有注明，窦泽此字段为保留字段。              |
+| TH  TLP处理提示  （TLP Processing Hints） | Byte  1 Bit 0                                                | Message中，除非另有注明，此字段为保留字段。                  |
 | TD  TLP摘要  （TLP Digest）               | Byte  2 Bit 7                                                | 如果为1，则说明TLP的末尾存在1DW的Digest字段（在LCRC和END字符之前）。 |
 | EP  受污染的数据  （Poisoned Data）       | Byte  2 Bit 6                                                | 如果为1，则表示数据荷载是被污染的。                          |
-| Attr[1:0]  属性  （Attribute）            | Byte  2 Bit 5:4                                              | Message中，除非另有注明，窦泽此字段为保留字段。              |
+| Attr[1:0]  属性  （Attribute）            | Byte  2 Bit 5:4                                              | Message中，除非另有注明，此字段为保留字段。                  |
 | AT[1:0]  地址类型  （Address Type）       | Byte  2 Bit 3:2                                              | Message的Address Type字段为保留字段，必须为0，但是并不要求甚至不鼓励接收方对这个字段进行检查。 |
 | Length[9:0]  长度                         | Byte  2 Bit 1:0  Byte  3 Bit 7:0                             | 用于表示完成包数据荷载的大小，单位为DW。对于Message来说，这个字段始终为0（无数据）或1（有1DW数据）。 |
 | Requester  ID[15:0]  Requester  ID        | Byte  4 Bit 7:0  Byte  5 Bit 7:0                             | 用于表示发送Message的Requester是谁。  Byte 4,7:0=Requester  Bus Number  Byte 5,7:3=Requester  Device Number  Byte 5,2:0=Requester  Function Number |
 | Tag[7:0]  Tag                             | Byte  6 Bit 7:0                                              | 由于所有的Message请求都是Posted的，不需要Requester接收完成包，因此不需要给Message分配Tag。这个字段应该为0。 |
-| Message  Code[7:0]  Message标识码         | Byte  7 Bit 7:0                                              | 这个字段包含的标识码表示发送的Message是什么种类。  o   0000 0000b=解锁Message（Unlock Message）  o   0001 0000b=延迟容忍报告（Lat. Tolerance Reporting）  o   0001 0010b=优化的Buffer刷新/填满（Optimized Buffer Flush/Fill）  o   0001 xxxxb=电源管理Message（Power Mgt. Message）  o   0010 0xxxb=INTx Message  o   0011 00xxb=错误Message（Error Message）  o   0100 xxxxb=忽略Message（Ignored Message）  o   0101 0000b=设置插槽功耗Message（Set Slot Power Message）  o   0111 111xb=厂商定义的Message（Vendor Defined Message） |
+| Message  Code[7:0]  Message标识码         | Byte  7 Bit 7:0                                              | 这个字段包含的标识码表示发送的Message是什么种类。 <br> 0000 0000b=解锁Message（Unlock Message） <br> 0001 0000b=延迟容忍报告（Lat. Tolerance Reporting） <br> 0001 0010b=优化的Buffer刷新/填满（Optimized Buffer Flush/Fill） <br> 0001 xxxxb=电源管理Message（Power Mgt. Message） <br> 0010 0xxxb=INTx Message <br> 0011 00xxb=错误Message（Error Message） <br> 0100 xxxxb=忽略Message（Ignored Message） <br> 0101 0000b=设置插槽功耗Message（Set Slot Power Message） <br> 0111 111xb=厂商定义的Message（Vendor Defined Message） |
 | Address[63:32]  高32bit地址               | Byte  8 Bit 7:0  Byte  9 Bit 7:0  Byte  10 Bit 7:0  Byte  11 Bit 7:0 | 如果Message选用了地址路由（见上面介绍的Type[4:0]字段），那么这个字段的内容就是64bit起始地址的高32bit。如果使用是ID路由，那么Byte8-9就组成目标ID。  否则，这个字段就不使用。 |
 | Address[31:0]  低32bit地址                | Byte  12 Bit 7:0  Byte  13 Bit 7:0  Byte  14 Bit 7:0  Byte  15 Bit 7:0 | 如果Message选用了地址路由（见上面介绍的Type[4:0]字段），那么这个字段的内容就是64bit起始地址的低32bit（最低的2bit必须为0，以保持DW对齐）。  否则，这个字段就不使用。 |
 
@@ -591,27 +593,27 @@ Message请求取代了PCI/PCI-X中使用的许多中断（interrupt）、错误�
 
 接下来几个小节的列表会列出9种Message组（如表 5‑8中给出的）的各自使用的更具体的Message Code。这9种Message组为：
 
-\1.    INTx中断信号（INTx Interrupt Signaling）
+1.    INTx中断信号（INTx Interrupt Signaling）
 
-\2.    电源管理（Power Management）
+2.    电源管理（Power Management）
 
-\3.    错误信号（Error Signaling）
+3.    错误信号（Error Signaling）
 
-\4.    支持锁定事务（Locked Transaction Support）
+4.    支持锁定事务（Locked Transaction Support）
 
-\5.    支持插槽功耗限制（Slot Power Limit Support）
+5.    支持插槽功耗限制（Slot Power Limit Support）
 
-\6.    厂商定义的Message（Vendor-Defined Message）
+6.    厂商定义的Message（Vendor-Defined Message）
 
-\7.    忽略Message（Ignored Message，与PCIe 1.1中的热插拔支持相关）
+7.    忽略Message（Ignored Message，与PCIe 1.1中的热插拔支持相关）
 
-\8.    延迟容忍报告（Latency Tolerance Reporting，LTR）
+8.    延迟容忍报告（Latency Tolerance Reporting，LTR）
 
-\9.    优化的Buffer刷新和填满（Optimized Buffer Flush and Fill，OBFF）
+9.    优化的Buffer刷新和填满（Optimized Buffer Flush and Fill，OBFF）
 
 ###### l INTx中断Message（INTx Interrupt Messages）
 
-许多设备都适用PCI 2.3的MSI（Message Signaled Interrupt）方法来传输中断，但是对于老的设备来说可能会不支持MSI。对于这些情况，PCIe定义了一个“虚拟线virtual wire”作为替代方案，设备通过发送Message来模拟PCI中断引脚（INTA-INTD）的拉起与释放。中断设备发出第一个Message来通知上行设备自己拉起了一个中断。一旦这个中断被服务了，那么中断设备就发出第二个Message来表示这个“虚拟中断线”已经释放。更多关于这种协议的内容，请参阅“Virtual INTx Signaling”一节。
+许多设备都适用PCI 2.3的MSI（Message Signaled Interrupt）方法来传输中断，但是对于老的设备来说可能会不支持MSI。对于这些情况，PCIe定义了一个“虚拟线virtual wire”作为替代方案，设备通过发送Message来模拟PCI中断引脚（INTA-INTD）的拉起与释放。中断设备发出第一个Message来通知上行设备自己拉起了一个中断。一旦这个中断被响应处理（Serviced）了，那么中断设备就发出第二个Message来表示这个“虚拟中断线”已经释放。更多关于这种协议的内容，请参阅“Virtual INTx Signaling”一节。
 
 ![img](img/5%20TLP%20%E5%85%83%E7%B4%A0/clip_image234.jpg)
 
@@ -619,23 +621,23 @@ Message请求取代了PCI/PCI-X中使用的许多中断（interrupt）、错误�
 
 关于使用INTx Message的一些规则：
 
-\1.    INTx Message没有数据荷载，因此Length字段为保留字段。
+1.    INTx Message没有数据荷载，因此Length字段为保留字段。
 
-\2.    它们只会由上行端口（Upstream Port）发出。对接收到的数据包进行这方面的规则检查是可选项，但是如果进行了检查，那么发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
+2.    它们只会由上行端口（Upstream Port）发出。对接收到的数据包进行这方面的规则检查是可选项，但是如果进行了检查，那么发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
 
-\3.    INTx Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
+3.    INTx Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
 
-\4.    链路两端的组件必须跟踪四种虚拟中断（virtual interrupt）的状态。如果上行端口的一个中断的逻辑状态发生了改变，那么它必须发出相应的INTx Message。
+4.    链路两端的组件必须跟踪四种虚拟中断（virtual interrupt）的状态。如果上行端口的一个中断的逻辑状态发生了改变，那么它必须发出相应的INTx Message。
 
-\5.    当命令寄存器（Command Register）中的Interrupt Disable位被置为1时，INTx信号是被禁用的（就像物理中断线的类似情况一样）。
+5.    当命令寄存器（Command Register）中的Interrupt Disable位被置为1时，INTx信号是被禁用的（就像物理中断线的类似情况一样）。
 
-\6.    如果在Interrupt Disable位为1时，设备的任何一个虚拟INTx信号仍为激活状态，那么上行端口必须发出对应的释放INTx Message（Deassert_INTx Message）。
+6.    如果在Interrupt Disable位为1时，设备的任何一个虚拟INTx信号仍为激活状态，那么上行端口必须发出对应的释放INTx Message（Deassert_INTx Message）。
 
-\7.    Switch的各个下行端口必须独立的跟踪四种INTx信号状态，并组合成上行端口的状态。
+7.    Switch的各个下行端口必须独立的跟踪四种INTx信号状态，并组合成上行端口的状态。
 
-\8.    RC的各个下行端口必须独立的跟踪下行端口的INTx信号状态，并将它们转换成系统中断，具体的转换方式根据具体实现而定。
+8.    RC的各个下行端口必须独立的跟踪下行端口的INTx信号状态，并将它们转换成系统中断，具体的转换方式根据具体实现而定。
 
-\9.    INTx Message使用“Local-Terminate at Receiver在接收者本地结束”的路由类型来使得一个Switch在必要时对指定的中断引脚进行重映射（参阅“Mapping and Collapsing INTx Messages”一节）。因此，INTx Message中的Requester ID有可能是最后一个传送者所指定的。
+9.    INTx Message使用“Local-Terminate at Receiver在接收者本地结束”的路由类型来使得一个Switch在必要时对指定的中断引脚进行重映射（参阅“Mapping and Collapsing INTx Messages”一节）。因此，INTx Message中的Requester ID有可能是最后一个传送者所指定的。
 
 ###### l 电源管理Message（Power Management Messages）
 
@@ -647,17 +649,17 @@ PCIe对PCI的电源管理是兼容的，并且还加入了基于硬件的链路�
 
 关于使用电源管理Message的一些规则：
 
-\1.    电源管理Message没有数据荷载，因此Length字段为保留字段。
+1.    电源管理Message没有数据荷载，因此Length字段为保留字段。
 
-\2.    电源管理Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
+2.    电源管理Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
 
-\3.    当一个下行端口收到了一个链路对端电源管理请求，请求要将链路电源状态更改为L1，但是下行端口拒绝这种更改，那么它就要发出PM_Active_State_Nak这种电源管理Message。
+3.    当一个下行端口收到了一个链路对端电源管理请求，请求要将链路电源状态更改为L1，但是下行端口拒绝这种更改，那么它就要发出PM_Active_State_Nak这种电源管理Message。
 
-\4.    当一个组件请求电源管理事件（Power Management Event）时，它的上行端口需要发出PM_PME，这个Message将被隐式路由至RC。
+4.    当一个组件请求电源管理事件（Power Management Event）时，它的上行端口需要发出PM_PME，这个Message将被隐式路由至RC。
 
-\5.    PM_Turn_Off会向下发送给所有的EP（由RC发出，进行隐式路由的广播）。
+5.    PM_Turn_Off会向下发送给所有的EP（由RC发出，进行隐式路由的广播）。
 
-\6.    PME_TO_Ack是由EP的上行端口发出的。对于拥有多个下行端口的Switch来说，只有当所有的下行端口都收到了这个Message，才会将其转发至上行（也就是汇聚收集，并路由转发给RC）。
+6.    PME_TO_Ack是由EP的上行端口发出的。对于拥有多个下行端口的Switch来说，只有当所有的下行端口都收到了这个Message，才会将其转发至上行（也就是汇聚收集，并路由转发给RC）。
 
 ###### l 错误Message（Error Messages）
 
@@ -669,11 +671,11 @@ PCIe对PCI的电源管理是兼容的，并且还加入了基于硬件的链路�
 
 关于使用Error Message的一些规则：
 
-\1.    Error Message没有数据荷载，因此Length字段为保留字段。
+1.    Error Message没有数据荷载，因此Length字段为保留字段。
 
-\2.    Error Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
+2.    Error Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
 
-\3.    RC会将Error Message转换成系统指定的事件。
+3.    RC会将Error Message转换成系统指定的事件。
 
 ###### l 支持锁定事务（Locked Transaction Support）
 
@@ -685,9 +687,9 @@ PCIe对PCI的电源管理是兼容的，并且还加入了基于硬件的链路�
 
 关于使用Unlock Message的一些规则：
 
-\1.    Unlock Message没有数据荷载，因此Length字段为保留字段。
+1.    Unlock Message没有数据荷载，因此Length字段为保留字段。
 
-\2.    Unlock Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
+2.    Unlock Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
 
 ###### l 设置插槽功率限制Message（Set Slot Power Limit Message）
 
@@ -699,13 +701,13 @@ PCIe对PCI的电源管理是兼容的，并且还加入了基于硬件的链路�
 
 关于使用Set Slot Power Limit Message的一些规则：
 
-\1.    Set Slot Power Limit Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
+1.    Set Slot Power Limit Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
 
-\2.    Set Slot Power Limit Message的数据荷载为1DW，因此Length字段的值为1。而在32bit数据荷载中仅有低10bit用于进行插槽功率放大或减小；剩下的高位必须都置为0。
+2.    Set Slot Power Limit Message的数据荷载为1DW，因此Length字段的值为1。而在32bit数据荷载中仅有低10bit用于进行插槽功率放大或减小；剩下的高位必须都置为0。
 
-\3.    当数据链路层转换为DL-Up状态时，该消息会自动发送。或者是放数据链路层已经报告了DL-Up状态，然后发生了一个配置写来写入Slot Capabilities Register时，该消息也会自动发送。
+3.    当数据链路层转换为DL-Up状态时，该消息会自动发送。或者是放数据链路层已经报告了DL-Up状态，然后发生了一个配置写来写入Slot Capabilities Register时，该消息也会自动发送。
 
-\4.    如果插槽中的板卡消耗的功率已经低于了指定的功率限制，那么可以忽略这种Message。
+4.    如果插槽中的板卡消耗的功率已经低于了指定的功率限制，那么可以忽略这种Message。
 
 ###### l 厂商定义的Message 0和1（Vendor-Defined Message 0 and 1）
 
@@ -721,17 +723,17 @@ Vendor-Defined Message是用于进行PCIe Message能力的扩展，这种扩展�
 
 关于使用Vendor-Defined Message的一些规则：
 
-\1.    Vendor-Defined Message 0和1可以有也可以没有数据荷载。
+1.    Vendor-Defined Message 0和1可以有也可以没有数据荷载。
 
-\2.    Message用Vendor ID来进行区分。
+2.    Message用Vendor ID来进行区分。
 
-\3.    Attr[2]和Attr[1:0]并不是保留位。
+3.    Attr[2]和Attr[1:0]并不是保留位。
 
-\4.    如果接收者无法认出这种Message：
+4.    如果接收者无法认出这种Message：
 
-o Type 1 Message可以被安静的忽略丢弃掉。
+	- Type 1 Message可以被安静的忽略丢弃掉。
 
-o Type 0 Message要被作为Unsupported Request（UR）这种错误情况来处理。
+	- Type 0 Message要被作为Unsupported Request（UR）这种错误情况来处理。
 
 ###### l 被忽略的Message（Ignored Message）
 
@@ -743,9 +745,9 @@ o Type 0 Message要被作为Unsupported Request（UR）这种错误情况来处�
 
 关于使用Hot Plug Message的一些规则：
 
-\1.    Hot Plug Message由下行端口发送给插槽中的板卡。
+1.    Hot Plug Message由下行端口发送给插槽中的板卡。
 
-\2.    Attention_Button Message是由插槽中的设备向上行发送的。
+2.    Attention_Button Message是由插槽中的设备向上行发送的。
 
 ###### l 延迟容忍报告Message（Latency Tolerance Reporting Message）
 
@@ -761,13 +763,13 @@ LTR Message是用来报告一个设备可接受的读写服务延迟，这是一
 
 关于使用LTR Message的一些规则：
 
-\1.    LTR Message没有数据荷载，因此Length字段为保留字段。
+1.    LTR Message没有数据荷载，因此Length字段为保留字段。
 
-\2.    LTR Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
+2.    LTR Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
 
 ###### l 优化的Buffer刷新和填充Message（Optimized Buffer Flush and Fill）
 
-OBFF Message用来向EP报告平台电源情况，以此来促进更搞笑的系统电源管理。更多关于这种技术的内容，请参阅“OBBF（Optimized Buffer Flush and Fill）”一节。
+OBFF Message用来向EP报告平台电源情况，以此来促进更高效的系统电源管理。更多关于这种技术的内容，请参阅“OBBF（Optimized Buffer Flush and Fill）”一节。
 
 ![img](img/5%20TLP%20%E5%85%83%E7%B4%A0/clip_image254.jpg)
 
@@ -779,8 +781,8 @@ OBFF Message用来向EP报告平台电源情况，以此来促进更搞笑的系
 
 关于使用OBFF Message的一些规则：
 
-\1.    OBFF Message没有数据荷载，因此Length字段为保留字段。
+1.    OBFF Message没有数据荷载，因此Length字段为保留字段。
 
-\2.    OBFF Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
+2.    OBFF Message需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
 
-\3.    Header中的Requester ID必须为传送中的端口的ID。
+3.    Header中的Requester ID必须为传送中的端口的ID。
