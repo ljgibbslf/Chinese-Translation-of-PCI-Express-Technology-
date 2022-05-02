@@ -782,3 +782,16 @@ OBFF Message 用来向EP 报告平台电源情况，以此来促进更高效的�
 2.    OBFF Message 需要使用默认的流量类型TC 0。接收方必须检查这一条规则，发现违例的数据包就会被当做畸形TLP（Malformed TLP）。
 
 3.    Header 中的Requester ID 必须为传送中的端口的ID。
+
+
+------
+
+原文：  Mindshare
+
+译者：  Michael ZZY
+
+校对：  
+
+欢迎参与 《Mindshare PCI Express Technology 3.0 一书的中文翻译计划》
+
+https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology
