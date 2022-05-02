@@ -450,7 +450,7 @@ PCIe Gen3 与前面所述的这个过程不同，对于 Gen3 的物理层逻辑�
 
 * 链路数据率（Link data rate）
 
-* 通道调转（Lane reversal）—— 通道收发连接相反了，本应 TX 连对端 RX ，若相反则变成 TX 连了对端 TX。
+* 通道调转（Lane reversal）—— 交换多个通道间的连接顺序
 
 * 极性反转（Polarity inversion）—— 通道极性连接相反，TX_P 应当连接对端的 RX_P，若相反则变成了 TX_P 连接了对端的 RX_N。
 
