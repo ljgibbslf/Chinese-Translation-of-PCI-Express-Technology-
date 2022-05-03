@@ -17,10 +17,10 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 - [第  2 章 PCIe 体系结构概述](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/1%20%E8%83%8C%E6%99%AF.md)
 - [第  3 章 PCIe 配置概述](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/1%20%E8%83%8C%E6%99%AF.md)
 - [第  4 章 地址空间与事务路由](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/4%20%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E4%B8%8E%E4%BA%8B%E5%8A%A1%E8%B7%AF%E7%94%B1.md)
-
-这些章节正在校对中
 - [第  5 章 TLP 元素](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/5%20TLP%20%E5%85%83%E7%B4%A0.md)
 - [第  6 章 流量控制](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/6%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6.md)
+
+这些章节正在校对中
 - [第  7 章 QoS 服务质量](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F.md)
 - [第  8 章 事务排序](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/8%20%E4%BA%8B%E5%8A%A1%E6%8E%92%E5%BA%8F.md)
 
@@ -45,7 +45,8 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 - Chapter 2,初校完成,XTang,21/12/27
 - Chapter 3,初校完成,ljgibbs,22/1/3
 - Chapter 4,初校完成,Karl_DGR,22/1/29 
-- Chapter 5,进行中,DZG,21/1/3 + 4weeks
+- Chapter 5,初校完成,ljgibbs,22/5/2, 二校进行中,DZG,21/5/3 + 4weeks
+- Chapter 6,初校完成,ljgibbs,22/5/3
 - Chapter 7,进行中,DWL,21/1/10+ 4weeks
 
 
@@ -60,7 +61,7 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 #### 贡献列表
 
 - Michael ZZY, 翻译 8 章
-- ljgibbs, 校对 2 章
+- ljgibbs, 校对 4 章
 - XTang, 校对 1 章
 - Karl_DGR, 校对 1 章
 
