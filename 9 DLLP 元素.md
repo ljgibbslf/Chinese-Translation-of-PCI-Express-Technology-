@@ -106,9 +106,9 @@ DLLP 包共有 4 种类型，分别用于 Ack/Nak、电源管理、流控以及�
 
 原文： Mindshare
 
-译者： Michael ZZY
+译者： LJGibbs
 
-校对:	LJGibbs
+校对:	
 
 欢迎参与 《Mindshare PCI Express Technology 3.0 一书的中文翻译计划》
 
