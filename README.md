@@ -20,6 +20,7 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 - [第  5 章 TLP 元素](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/5%20TLP%20%E5%85%83%E7%B4%A0.md)
 - [第  6 章 流量控制](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/6%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6.md)
 - [第  9 章 DLLP 元素](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/9%20DLLP%20%E5%85%83%E7%B4%A0.md)
+- [第  12 章 物理层逻辑（Gen3）](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/9%20DLLP%20%E5%85%83%E7%B4%A0.md)
 
 这些章节正在校对中
 - [第  7 章 QoS 服务质量](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F.md)
@@ -35,7 +36,7 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 - Chapter 1-8,完成撒花,Michael ZZY
 - Chapter 9,完成,LJGibbs,22/5/3
 - Chapter 11,进行中,Zokion,21/12/22 + 12weeks
-- Chapter 12,进行中,F.B.,21/12/22 + 12weeks
+- Chapter 12,完成, Brook 
 - Chapter 14,进行中,ljgibbs,21/12/22 + 18weeks
 - Chapter 15,进行中,tedyyc,22/1/9 + 12weeks
 - Chapter 17,进行中,Karl_DGR,22/2/3 + 18weeks
@@ -50,6 +51,7 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 - Chapter 6,初校完成,ljgibbs,22/5/3
 - Chapter 7,进行中,DWL,21/1/10+ 4weeks
 - Chapter 8,进行中,LJGibbs,21/5/3+ 4weeks
+- Chapter 12,初校完成,LJGibbs,22/10/6
 
 
 首席合作新媒体:
@@ -63,7 +65,8 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 #### 贡献列表
 
 - Michael ZZY, 翻译 8 章
-- ljgibbs, 校对 4 章, 翻译 1 章
+- Brook，翻译 1 章
+- ljgibbs, 校对 5 章, 翻译 1 章
 - XTang, 校对 1 章
 - Karl_DGR, 校对 1 章
 
