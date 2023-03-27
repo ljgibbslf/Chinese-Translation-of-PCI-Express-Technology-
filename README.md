@@ -13,21 +13,21 @@ Mindshare PCI Express Technology 3.0 一书的中文翻译
 
 #### 目录
 
-- [第  1 章 背景](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/1%20%E8%83%8C%E6%99%AF.md)
-- [第  2 章 PCIe 体系结构概述](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/1%20%E8%83%8C%E6%99%AF.md)
-- [第  3 章 PCIe 配置概述](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/1%20%E8%83%8C%E6%99%AF.md)
-- [第  4 章 地址空间与事务路由](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/4%20%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E4%B8%8E%E4%BA%8B%E5%8A%A1%E8%B7%AF%E7%94%B1.md)
-- [第  5 章 TLP 元素](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/5%20TLP%20%E5%85%83%E7%B4%A0.md)
-- [第  6 章 流量控制](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/6%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6.md)
-- [第  9 章 DLLP 元素](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/9%20DLLP%20%E5%85%83%E7%B4%A0.md)
-- [第  12 章 物理层逻辑（Gen3）](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/9%20DLLP%20%E5%85%83%E7%B4%A0.md)
+- [第  1 章 背景](<1 背景.md>)
+- [第  2 章 PCIe 体系结构概述](<2 PCIe 体系结构概述.md>)
+- [第  3 章 PCIe 配置概述](<3 PCIe 配置概述.md>)
+- [第  4 章 地址空间与事务路由](<4 地址空间与事务路由.md>)
+- [第  5 章 TLP 元素](<5 TLP 元素.md>)
+- [第  6 章 流量控制](<6 流量控制.md>)
+- [第  9 章 DLLP 元素](<9 DLLP 元素.md>)
+- [第  12 章 物理层逻辑（Gen3）](<12 物理层逻辑(gen3).md>)
 
 这些章节正在校对中
-- [第  7 章 QoS 服务质量](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/7%20QoS%20%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F.md)
-- [第  8 章 事务排序](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/8%20%E4%BA%8B%E5%8A%A1%E6%8E%92%E5%BA%8F.md)
+- [第  7 章 QoS 服务质量](<7 QoS 服务质量.md>)
+- [第  8 章 事务排序](<8 事务排序.md>)
 
 这些章节正在翻译中
-- [第 14 章 链路初始化与训练](https://gitee.com/ljgibbs/chinese-translation-of-pci-express-technology/blob/master/14%20%E9%93%BE%E8%B7%AF%E5%88%9D%E5%A7%8B%E5%8C%96%E4%B8%8E%E8%AE%AD%E7%BB%83.md)
+- [第 14 章 链路初始化与训练](<14 链路初始化与训练.md>)
 
 #### 工作分配
 
